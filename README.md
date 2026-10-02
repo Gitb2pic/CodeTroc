@@ -8,8 +8,6 @@
 ![Traefik](https://img.shields.io/badge/Traefik-proxy-24A1C1?logo=traefikproxy&logoColor=white)
 ![Statut](https://img.shields.io/badge/statut-MVP%20hackathon-orange)
 
-> Projet réalisé dans le cadre du hackathon `<NOM DU HACKATHON>`.
-
 ---
 
 ## Sommaire
