@@ -92,7 +92,56 @@ paths:
               schema: { $ref: '#/components/schemas/Me' }
         '401':
           $ref: '#/components/responses/Problem'
+  /me/compte:
+    get:
+      operationId: getMyAccount
+      summary: Solde disponible et crédits en séquestre
+      tags: [credits]
+      security: [{ bearer: [] }]
+      responses:
+        '200':
+          description: Soldes.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Balance' }
+        '401':
+          $ref: '#/components/responses/Problem'
+  /me/compte/mouvements:
+    get:
+      operationId: listMyMovements
+      summary: Historique paginé des mouvements de crédits
+      tags: [credits]
+      security: [{ bearer: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Page de mouvements, du plus récent au plus ancien.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Movement' } }
+                  next_cursor: { type: string, nullable: true }
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
 components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    Cursor:
+      name: cursor
+      in: query
+      description: Valeur next_cursor de la page précédente.
+      schema: { type: string }
   securitySchemes:
     bearer:
       type: http
@@ -106,6 +155,25 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    Balance:
+      type: object
+      additionalProperties: false
+      required: [disponible, sequestre_sortant, sequestre_entrant]
+      properties:
+        disponible: { type: integer, description: Crédits dépensables. }
+        sequestre_sortant: { type: integer, description: Bloqués pour des échanges où le membre est demandeur. }
+        sequestre_entrant: { type: integer, description: Bloqués pour des échanges où le membre est prestataire. }
+    Movement:
+      type: object
+      additionalProperties: false
+      required: [id, type, montant, date, id_echange, id_jalon]
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [BONUS, BLOCAGE, LIBERATION, REMBOURSEMENT] }
+        montant: { type: integer, description: 'Positif si crédité, négatif si débité.' }
+        date: { type: string, format: date-time }
+        id_echange: { type: string, format: uuid, nullable: true }
+        id_jalon: { type: string, format: uuid, nullable: true }
     AccessToken:
       type: object
       additionalProperties: false

@@ -8,4 +8,6 @@ import (
 )
 
 // onUserCreated s'exécute dans la transaction qui crée un utilisateur.
-func (s *Service) onUserCreated(context.Context, pgx.Tx, uuid.UUID) error { return nil }
+func (s *Service) onUserCreated(ctx context.Context, tx pgx.Tx, userID uuid.UUID) error {
+	return s.createUserAccount(ctx, tx, userID)
+}

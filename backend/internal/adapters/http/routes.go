@@ -18,4 +18,8 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 
 	m := v1.Group("", requireAuth(o.App))
 	m.GET("/me", auth.me)
+
+	credits := creditHandlers{svc: o.App}
+	m.GET("/me/compte", credits.balance)
+	m.GET("/me/compte/mouvements", credits.movements)
 }
