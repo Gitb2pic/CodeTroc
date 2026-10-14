@@ -8,14 +8,14 @@ migrations, API, worker et front. Les fichiers utilisés : `compose.yaml` +
 
 - Un VPS Linux (Debian 12 ou Ubuntu 24.04), **2 Go de RAM minimum** (la
   compilation Go et Vite en consomment), 20 Go de disque.
-- Un nom de domaine, par exemple `codetroc.exemple.fr`.
+- Le domaine `codetroc.labtools.tech`.
 - Un compte GitHub avec lequel créer l'OAuth App et la GitHub App.
 
 ## 1. DNS
 
 Crée un enregistrement **A** (et **AAAA** si le VPS a de l'IPv6) :
-`codetroc.exemple.fr → <IP du VPS>`. Attends qu'il réponde
-(`dig +short codetroc.exemple.fr`) avant le premier démarrage, sinon Let's
+`codetroc.labtools.tech → <IP du VPS>`. Attends qu'il réponde
+(`dig +short codetroc.labtools.tech`) avant le premier démarrage, sinon Let's
 Encrypt échoue.
 
 ## 2. Préparer le serveur
@@ -51,8 +51,8 @@ GitHub → *Settings* → *Developer settings* → *OAuth Apps* → *New OAuth A
 
 | Champ | Valeur |
 |---|---|
-| Homepage URL | `https://codetroc.exemple.fr` |
-| Authorization callback URL | `https://codetroc.exemple.fr/api/v1/auth/github/callback` |
+| Homepage URL | `https://codetroc.labtools.tech` |
+| Authorization callback URL | `https://codetroc.labtools.tech/api/v1/auth/github/callback` |
 
 Note le **Client ID**, génère un **Client secret**.
 
@@ -62,8 +62,8 @@ GitHub → *Developer settings* → *GitHub Apps* → *New GitHub App* :
 
 | Champ | Valeur |
 |---|---|
-| Homepage URL | `https://codetroc.exemple.fr` |
-| Webhook URL | `https://codetroc.exemple.fr/api/v1/webhooks/github` |
+| Homepage URL | `https://codetroc.labtools.tech` |
+| Webhook URL | `https://codetroc.labtools.tech/api/v1/webhooks/github` |
 | Webhook secret | une valeur aléatoire : `openssl rand -hex 32` |
 | Permissions (Repository) | **Pull requests : Read-only**, **Checks : Read-only**, **Metadata : Read-only** |
 | Événements | **Pull request**, **Check suite**, **Check run** |
@@ -85,13 +85,8 @@ cp /chemin/vers/cle-github-app.pem    secrets/github_app_private_key.pem
 chmod 644 secrets/*                  # lisibles par les utilisateurs non root des conteneurs
 chmod 700 secrets                    # le dossier reste privé sur l'hôte
 
-cat > .env <<'EOF'
-DOMAIN=codetroc.exemple.fr
-ACME_EMAIL=toi@exemple.fr
-GITHUB_CLIENT_ID=<Client ID OAuth>
-GITHUB_APP_ID=<App ID>
-EOF
-chmod 600 .env
+cp .env.prod.example .env && chmod 600 .env
+nano .env    # compléter ACME_EMAIL, GITHUB_CLIENT_ID, GITHUB_APP_ID
 ```
 
 > **Sauvegarde `secrets/vault_kek` hors du serveur** (gestionnaire de mots de
@@ -111,11 +106,11 @@ le certificat au premier accès HTTPS (quelques secondes).
 Vérifications :
 
 ```sh
-curl -I http://codetroc.exemple.fr            # 301 vers https
-curl https://codetroc.exemple.fr/api/v1/ready # {"status":"ready"}
+curl -I http://codetroc.labtools.tech            # 301 vers https
+curl https://codetroc.labtools.tech/api/v1/ready # {"status":"ready"}
 ```
 
-Puis ouvre `https://codetroc.exemple.fr`, connecte-toi avec GitHub.
+Puis ouvre `https://codetroc.labtools.tech`, connecte-toi avec GitHub.
 
 Pour te donner le rôle d'administrateur après ta première connexion :
 
