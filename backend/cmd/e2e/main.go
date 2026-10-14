@@ -140,8 +140,9 @@ func run() error {
 	router.NoRoute(func(c *gin.Context) {
 		// Même politique que frontend/nginx.conf (le front a la sienne, l'API garde default-src 'none').
 		c.Header("Content-Security-Policy", frontCSP)
+		// Clean sur un chemin absolu supprime toute remontée « .. » : p reste sous FRONT_DIR.
 		p := filepath.Join(front, filepath.Clean("/"+c.Request.URL.Path))
-		if st, err := os.Stat(p); err == nil && !st.IsDir() && !strings.HasPrefix(c.Request.URL.Path, "/api/") {
+		if st, err := os.Stat(p); err == nil && !st.IsDir() && !strings.HasPrefix(c.Request.URL.Path, "/api/") { // #nosec G703 -- voir ci-dessus
 			c.File(p)
 			return
 		}

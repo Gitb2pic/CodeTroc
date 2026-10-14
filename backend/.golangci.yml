@@ -20,6 +20,10 @@ linters:
       # Les tests construisent des requêtes httptest sans contexte.
       - path: _test\.go
         linters: [noctx]
+      # Fixtures de test : clés et URL factices, conversions sur des petits entiers.
+      - path: _test\.go
+        linters: [gosec]
+        text: "G101|G115"
 formatters:
   enable:
     - gofmt

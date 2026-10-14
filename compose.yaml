@@ -5,7 +5,7 @@ name: codetroc
 
 services:
   traefik:
-    image: traefik:v3.5
+    image: traefik:v3.6   # v3.6+ : compatible Docker Engine 29 (API ≥ 1.40)
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false

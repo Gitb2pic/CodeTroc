@@ -24,7 +24,7 @@
 
 | Besoin | Choix | Pourquoi |
 |---|---|---|
-| Langage | Go 1.25 | Typage fort, binaire unique, concurrence simple pour le worker |
+| Langage | Go ≥ 1.26 (chaîne 1.27.2) | Typage fort, binaire unique, concurrence simple pour le worker |
 | HTTP | Gin | Demandé ; routeur rapide, middlewares simples |
 | Base | PostgreSQL 16 | Transactions ACID, contraintes CHECK, index partiels, verrous `FOR UPDATE` |
 | Accès SQL | pgx v5 + **sqlc** | SQL écrit à la main et vérifié à la compilation ; pas d'ORM qui masque les verrous |

@@ -42,7 +42,8 @@ func toUserJSON(u app.User) userJSON {
 }
 
 func (h authHandlers) setCookie(c *gin.Context, name, value, path string, maxAge int, sameSite http.SameSite) {
-	http.SetCookie(c.Writer, &http.Cookie{Name: name, Value: value, Path: path, MaxAge: maxAge,
+	// Secure suit COOKIE_SECURE, refusé à false en production par la configuration.
+	http.SetCookie(c.Writer, &http.Cookie{Name: name, Value: value, Path: path, MaxAge: maxAge, // #nosec G124 -- voir ci-dessus
 		HttpOnly: true, Secure: h.secure, SameSite: sameSite})
 }
 

@@ -185,3 +185,12 @@ func TestLoad_AuthAndGitHubRejections(t *testing.T) {
 		})
 	}
 }
+
+func TestDatabaseURL_NeedsNothingElse(t *testing.T) {
+	env := map[string]string{"DATABASE_URL": "postgres://db/codetroc"}
+	got, err := DatabaseURL(func(k string) (string, bool) { v, ok := env[k]; return v, ok })
+	require.NoError(t, err)
+	assert.Equal(t, "postgres://db/codetroc", got)
+	_, err = DatabaseURL(func(string) (string, bool) { return "", false })
+	assert.Error(t, err)
+}

@@ -289,3 +289,9 @@ func validProxy(s string) bool {
 	_, err := netip.ParsePrefix(s)
 	return err == nil
 }
+
+// DatabaseURL lit seulement DATABASE_URL (ou DATABASE_URL_FILE) : la commande
+// migrate n'a besoin d'aucun autre réglage, ni des secrets de l'API.
+func DatabaseURL(getenv Getenv) (string, error) {
+	return secret(getenv, "DATABASE_URL")
+}

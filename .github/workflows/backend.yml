@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-go@v5
         with: { go-version-file: backend/go.mod, cache-dependency-path: backend/go.sum }
       - uses: golangci/golangci-lint-action@v8
-        with: { version: v2.5.0, working-directory: backend }
+        with: { version: v2.14.0, working-directory: backend }
 
   test:
     runs-on: ubuntu-latest

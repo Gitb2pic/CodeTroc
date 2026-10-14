@@ -64,6 +64,6 @@ champs de formulaire avec libellés explicites et aides en `aria-describedby`.
 
 ## Limites connues
 
-- L'image Docker du front n'a pas pu être construite ici (Docker Hub limité) : à valider en CI.
+- Images construites et stack Compose vérifiée le 14 oct. 2026 (voir le rapport de pentest, § images).
 - Pas de temps réel (SSE) : interrogation périodique de l'échange et du compteur.
 - Mise en page bureau (≥ 1024 px) héritée de la maquette ; le responsive mobile reste à faire.

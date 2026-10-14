@@ -14,12 +14,12 @@ import (
 )
 
 func main() {
-	cfg, err := config.FromOS()
+	logger := logging.New(os.Stdout, slog.LevelInfo, "migrate")
+	dbURL, err := config.DatabaseURL(os.LookupEnv)
 	if err != nil {
-		slog.Error("configuration invalide", slog.String("error", err.Error()))
+		logger.Error("configuration invalide", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
-	logger := logging.New(os.Stdout, cfg.LogLevel, "migrate")
 
 	cmd := "up"
 	if len(os.Args) > 1 {
@@ -32,7 +32,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "usage : migrate [up]")
 		os.Exit(2)
 	}
-	if err := postgres.MigrateUp(cfg.DatabaseURL); err != nil {
+	if err := postgres.MigrateUp(dbURL); err != nil {
 		logger.Error("échec des migrations", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
