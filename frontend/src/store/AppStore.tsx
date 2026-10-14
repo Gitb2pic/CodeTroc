@@ -31,7 +31,18 @@ function load(): Persisted {
     // Stockage indisponible (navigation privée, aperçu) : valeurs par défaut.
   }
   const flow = typeof s.flow === 'number' && s.flow >= 0 && s.flow <= 5 ? (s.flow as Flow) : 2;
-  return { flow, exPack: s.exPack || 'p1', theme: s.theme === 'light' ? 'light' : 'dark' };
+  return { flow, exPack: s.exPack || 'p1', theme: s.theme === 'light' || s.theme === 'dark' ? s.theme : systemTheme() };
+}
+
+/** Thème du système (ou imposé sur <html data-theme>) quand aucun choix n'est mémorisé. */
+function systemTheme(): Theme {
+  const forced = document.documentElement.getAttribute('data-theme');
+  if (forced === 'light' || forced === 'dark') return forced;
+  try {
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  } catch {
+    return 'dark';
+  }
 }
 
 interface AppState {

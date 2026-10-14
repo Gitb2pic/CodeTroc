@@ -52,6 +52,7 @@ body {
 
 .app-root {
   min-height: 100vh;
+  max-width: 100%;
   background: var(--bg);
   color: var(--tx);
   font-family: var(--sans);
@@ -254,4 +255,12 @@ select {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
+}
+
+/* Les écrans sont conçus pour le bureau (≥ 1280 px). En dessous, on fait
+   défiler l'application dans son cadre plutôt que la page entière. */
+@media (max-width: 1279px) {
+  .app-root {
+    overflow-x: auto;
+  }
 }

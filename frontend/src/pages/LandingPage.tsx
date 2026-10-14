@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, Logo } from '../components/ui';
 import { WELCOME_BONUS } from '../data/fixtures';
@@ -36,6 +37,11 @@ export function LandingPage() {
   const navigate = useNavigate();
   const toOnboarding = () => navigate(ROUTES.onboarding);
   const navLink = { color: 'var(--tx2)' };
+  // Défilement explicite : un lien #ancre casserait le routage par hash.
+  const scrollTo = (id: string) => (e: MouseEvent) => {
+    e.preventDefault();
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <div>
@@ -46,9 +52,9 @@ export function LandingPage() {
             CodeTroc
           </div>
           <nav style={{ display: 'flex', gap: 22, fontSize: 13.5, whiteSpace: 'nowrap' }}>
-            <a href="#etapes" style={navLink}>Comment ça marche</a>
-            <a href="#preuves" style={navLink}>Preuves GitHub</a>
-            <a href="#coffre" style={navLink}>Coffre d'accès</a>
+            <a href="#etapes" onClick={scrollTo('etapes')} style={navLink}>Comment ça marche</a>
+            <a href="#preuves" onClick={scrollTo('preuves')} style={navLink}>Preuves GitHub</a>
+            <a href="#coffre" onClick={scrollTo('coffre')} style={navLink}>Coffre d'accès</a>
             <a href={ROUTES.cat} onClick={(e) => { e.preventDefault(); navigate(ROUTES.cat); }} style={navLink}>Catalogue</a>
           </nav>
           <div style={{ flex: 1 }} />

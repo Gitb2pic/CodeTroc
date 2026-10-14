@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "build:artifact": "tsc --noEmit && vite build --mode artifact --base ./ --outDir dist-artifact",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
