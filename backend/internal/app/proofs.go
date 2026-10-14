@@ -259,6 +259,10 @@ func (s *Service) recordVerdict(ctx context.Context, proofID uuid.UUID, v proof.
 		if v.Status == proof.Valid {
 			return s.deliverMilestone(ctx, tx, r, m, nil)
 		}
+		if v.Status == proof.Rejected && current != string(proof.Rejected) {
+			return s.notify(ctx, tx, NotifProofRejected, nil, &r.ID,
+				map[string]any{"id_jalon": m.ID, "ordre": m.Order, "detail": v.Detail}, r.Provider)
+		}
 		return nil
 	})
 }

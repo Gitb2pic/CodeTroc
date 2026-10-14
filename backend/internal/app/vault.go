@@ -116,7 +116,10 @@ func (s *Service) ShareSecret(ctx context.Context, a Actor, exchangeID uuid.UUID
 			sealed.Ciphertext, sealed.Nonce, sealed.WrappedDEK, sealed.DEKNonce, sealed.KEKVersion, in.ExpiresAt, s.now()); err != nil {
 			return err
 		}
-		return s.logAccess(ctx, tx, id, &a.ID, "CREATION", ip)
+		if err := s.logAccess(ctx, tx, id, &a.ID, "CREATION", ip); err != nil {
+			return err
+		}
+		return s.notify(ctx, tx, NotifSecretShared, &a.ID, &r.ID, map[string]any{"id_secret": id, "libelle": strings.TrimSpace(in.Label)}, r.Provider)
 	})
 	if err != nil {
 		return Secret{}, err
@@ -223,7 +226,10 @@ func (s *Service) RevealSecret(ctx context.Context, a Actor, id uuid.UUID, ip st
 		if value, err = s.vault.Open(r.Sealed, secretAAD(r.ExchangeID, id)); err != nil {
 			return err
 		}
-		return s.logAccess(ctx, tx, id, &a.ID, "REVELATION", ip)
+		if err := s.logAccess(ctx, tx, id, &a.ID, "REVELATION", ip); err != nil {
+			return err
+		}
+		return s.notify(ctx, tx, NotifSecretRevealed, &a.ID, &r.ExchangeID, map[string]any{"id_secret": id}, r.Depositor)
 	})
 	if err != nil {
 		return "", s.refused(ctx, err, id, a, ip)

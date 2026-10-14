@@ -70,6 +70,7 @@ func (s *Service) purge(ctx context.Context) error {
 		{`DELETE FROM cle_idempotence WHERE cree_le < $1`, now.Add(-24 * time.Hour)},
 		{`DELETE FROM webhook_livraison WHERE recu_le < $1`, now.Add(-30 * 24 * time.Hour)},
 		{`DELETE FROM jeton_rafraichissement WHERE expire_le < $1`, now.Add(-7 * 24 * time.Hour)},
+		{`DELETE FROM notification WHERE lue AND date_creation < $1`, now.Add(-90 * 24 * time.Hour)},
 	} {
 		if _, err := s.db.Exec(ctx, q.sql, q.at); err != nil {
 			return err

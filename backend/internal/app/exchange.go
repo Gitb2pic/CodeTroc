@@ -171,6 +171,9 @@ func (s *Service) setExchangeStatus(ctx context.Context, tx pgx.Tx, r *exRow, to
 	if err := recordTransition(ctx, tx, "ECHANGE", r.ID, string(r.Status), string(to), by, reason, s.now()); err != nil {
 		return err
 	}
+	if err := s.notifyExchange(ctx, tx, *r, r.Status, to, by); err != nil {
+		return err
+	}
 	r.Status = to
 	if to == exchange.Done || to == exchange.Cancelled {
 		return s.onExchangeClosed(ctx, tx, r.ID)
@@ -189,7 +192,10 @@ func (s *Service) setMilestoneStatus(ctx context.Context, tx pgx.Tx, id uuid.UUI
 		WHERE id_jalon = $1`, id, to, to == exchange.Delivered, s.now(), to.Final()); err != nil {
 		return err
 	}
-	return recordTransition(ctx, tx, "JALON", id, string(from), string(to), by, reason, s.now())
+	if err := recordTransition(ctx, tx, "JALON", id, string(from), string(to), by, reason, s.now()); err != nil {
+		return err
+	}
+	return s.notifyMilestone(ctx, tx, id, from, to, by)
 }
 
 // RequestExchange crée une demande d'échange au statut PROPOSE (UC06).
@@ -241,7 +247,10 @@ func (s *Service) RequestExchange(ctx context.Context, a Actor, req ExchangeRequ
 				return err
 			}
 		}
-		return recordTransition(ctx, tx, "ECHANGE", id, "", string(exchange.Proposed), &a.ID, "", s.now())
+		if err := recordTransition(ctx, tx, "ECHANGE", id, "", string(exchange.Proposed), &a.ID, "", s.now()); err != nil {
+			return err
+		}
+		return s.notify(ctx, tx, NotifExchangeRequested, &a.ID, &id, nil, offer.Provider.ID)
 	})
 	if err != nil {
 		return ExchangeView{}, err
@@ -382,8 +391,10 @@ func (s *Service) CancelExchange(ctx context.Context, a Actor, id uuid.UUID) (Ex
 			case r.CancelRequestedBy != nil && *r.CancelRequestedBy != a.ID:
 				return s.cancelInProgress(ctx, tx, &r, ms, a, "annulation d'un commun accord")
 			case r.CancelRequestedBy == nil:
-				_, err := tx.Exec(ctx, `UPDATE echange SET annulation_demandee_par = $2 WHERE id_echange = $1`, r.ID, a.ID)
-				return err
+				if _, err := tx.Exec(ctx, `UPDATE echange SET annulation_demandee_par = $2 WHERE id_echange = $1`, r.ID, a.ID); err != nil {
+					return err
+				}
+				return s.notify(ctx, tx, NotifCancelRequested, &a.ID, &r.ID, nil, r.Requester, r.Provider)
 			}
 			return nil
 		default:

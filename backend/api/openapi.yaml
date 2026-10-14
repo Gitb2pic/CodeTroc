@@ -957,6 +957,76 @@ paths:
         '400': { $ref: '#/components/responses/Problem' }
         '401': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /notifications:
+    get:
+      operationId: listNotifications
+      summary: 'Notifications du membre, des plus récentes aux plus anciennes'
+      tags: [notifications]
+      security: [{ bearer: [] }]
+      parameters:
+        - { name: non_lues, in: query, schema: { type: boolean } }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Page de notifications.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Notification' } }
+                  next_cursor: { type: string, nullable: true }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /notifications/compteur:
+    get:
+      operationId: countUnreadNotifications
+      summary: 'Nombre de notifications non lues (pastille de la cloche)'
+      tags: [notifications]
+      security: [{ bearer: [] }]
+      responses:
+        '200':
+          description: Compteur.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [non_lues]
+                properties:
+                  non_lues: { type: integer, minimum: 0 }
+        '401': { $ref: '#/components/responses/Problem' }
+  /notifications/lire:
+    post:
+      operationId: markNotificationsRead
+      summary: 'Marquer comme lues (les ids donnés, ou toutes si la liste est vide ou absente)'
+      tags: [notifications]
+      security: [{ bearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                ids: { type: array, maxItems: 100, items: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Nombre de notifications marquées.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [marquees]
+                properties:
+                  marquees: { type: integer, minimum: 0 }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
 components:
   parameters:
     Id:
@@ -992,6 +1062,21 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    Notification:
+      type: object
+      additionalProperties: false
+      required: [id, type, id_echange, donnees, lue, date]
+      properties:
+        id: { type: string, format: uuid }
+        type:
+          type: string
+          enum: [ECHANGE_DEMANDE, ECHANGE_ACCEPTE, ECHANGE_REFUSE, ANNULATION_DEMANDEE, ECHANGE_ANNULE, ECHANGE_TERMINE,
+                 JALON_LIVRE, JALON_LIBERE, PREUVE_REJETEE, LITIGE_OUVERT, LITIGE_AFFECTE, LITIGE_REPONSE, LITIGE_DECIDE,
+                 MESSAGE_RECU, SECRET_PARTAGE, SECRET_REVELE, AVIS_RECU]
+        id_echange: { type: string, format: uuid, nullable: true }
+        donnees: { type: object, description: 'Contexte (pack, jalon, montant, id_litige…) ; jamais de secret.' }
+        lue: { type: boolean }
+        date: { type: string, format: date-time }
     Secret:
       type: object
       additionalProperties: false

@@ -104,10 +104,13 @@ func (s *Service) OpenDispute(ctx context.Context, a Actor, milestoneID uuid.UUI
 			now := s.now()
 			assignedAt = &now
 		}
-		return tx.QueryRow(ctx, `
+		if err := tx.QueryRow(ctx, `
 			INSERT INTO litige (id_jalon, id_ouvreur, motif, id_arbitre, date_ouverture, date_affectation)
 			VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_litige`,
-			m.ID, a.ID, strings.TrimSpace(reason), arbiter, s.now(), assignedAt).Scan(&id)
+			m.ID, a.ID, strings.TrimSpace(reason), arbiter, s.now(), assignedAt).Scan(&id); err != nil {
+			return err
+		}
+		return s.notifyDispute(ctx, tx, id, NotifDisputeOpened, &a.ID, true, true)
 	})
 	if err != nil {
 		return DisputeView{}, err
@@ -174,6 +177,9 @@ func (s *Service) RespondToDispute(ctx context.Context, a Actor, id uuid.UUID, t
 	if tag.RowsAffected() == 0 {
 		return DisputeView{}, errAlreadyAnswered
 	}
+	if err := s.notifyDispute(ctx, s.db, id, NotifDisputeAnswered, &a.ID, false, true); err != nil {
+		return DisputeView{}, err
+	}
 	return s.GetDispute(ctx, a, id)
 }
 
@@ -201,8 +207,10 @@ func (s *Service) AssignDispute(ctx context.Context, a Actor, id, arbiterID uuid
 		if !ok {
 			return errBadArbiter
 		}
-		_, err := tx.Exec(ctx, `UPDATE litige SET id_arbitre = $2, date_affectation = $3 WHERE id_litige = $1`, id, arbiterID, s.now())
-		return err
+		if _, err := tx.Exec(ctx, `UPDATE litige SET id_arbitre = $2, date_affectation = $3 WHERE id_litige = $1`, id, arbiterID, s.now()); err != nil {
+			return err
+		}
+		return s.notifyDispute(ctx, tx, id, NotifDisputeAssigned, &a.ID, false, true)
 	})
 	if err != nil {
 		return DisputeView{}, err
@@ -284,6 +292,9 @@ func (s *Service) DecideDispute(ctx context.Context, a Actor, id uuid.UUID, dec 
 			return err
 		}
 		if err := recordTransition(ctx, tx, "LITIGE", id, "OUVERT", "CLOS", &a.ID, dec.Kind, s.now()); err != nil {
+			return err
+		}
+		if err := s.notifyDispute(ctx, tx, id, NotifDisputeDecided, &a.ID, true, false); err != nil {
 			return err
 		}
 		if err := s.setMilestoneStatus(ctx, tx, m.ID, m.Status, target, &a.ID, "décision d'arbitrage "+dec.Kind); err != nil {

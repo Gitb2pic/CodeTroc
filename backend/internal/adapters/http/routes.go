@@ -71,6 +71,11 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	m.POST("/secrets/:id/revoquer", vault.revoke)
 	m.GET("/secrets/:id/journal", vault.journal)
 
+	notif := notificationHandlers{svc: o.App}
+	m.GET("/notifications", notif.list)
+	m.GET("/notifications/compteur", notif.count)
+	m.POST("/notifications/lire", notif.markRead)
+
 	credits := creditHandlers{svc: o.App}
 	m.GET("/me/compte", credits.balance)
 	m.GET("/me/compte/mouvements", credits.movements)

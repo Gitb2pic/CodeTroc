@@ -355,7 +355,7 @@ Taille : S (≤ 1 j), M (2–3 j), L (4–5 j). Les écrans cités sont ceux du 
   expiration ; valeur effacée à la révocation.
 - **Pentest** : lecture par un tiers, rejeu après révocation, fuite dans les logs et les erreurs.
 
-### F13 — Notifications · M · écran Notifications, cloche
+### F13 — Notifications · M · écran Notifications, cloche · **livré**
 
 - **Endpoints** : `GET /notifications`, `POST /notifications/lire`.
 - **Contenu** : événements de domaine (jalon livré, CI, crédits, accès, litige) enregistrés dans la même transaction que l'action (outbox).

@@ -82,7 +82,10 @@ func (s *Service) LeaveReview(ctx context.Context, a Actor, exchangeID uuid.UUID
 		if err != nil {
 			return err
 		}
-		return s.refreshReputation(ctx, tx, recipient)
+		if err := s.refreshReputation(ctx, tx, recipient); err != nil {
+			return err
+		}
+		return s.notify(ctx, tx, NotifReview, &a.ID, &r.ID, map[string]any{"note": rating}, recipient)
 	})
 	if err != nil {
 		return Review{}, err
@@ -165,12 +168,17 @@ func (s *Service) PostMessage(ctx context.Context, a Actor, exchangeID uuid.UUID
 		return Message{}, ErrNotFound
 	}
 	var m Message
-	err = s.db.QueryRow(ctx, `
+	err = s.tx(ctx, func(tx pgx.Tx) error {
+		if err := tx.QueryRow(ctx, `
 		WITH ins AS (INSERT INTO message (id_echange, id_auteur, contenu, date_envoi) VALUES ($1, $2, $3, $4)
 		             RETURNING id_message, id_auteur, contenu, date_envoi)
 		SELECT ins.id_message, ins.id_auteur, u.pseudo, ins.contenu, ins.date_envoi
 		FROM ins JOIN utilisateur u ON u.id_utilisateur = ins.id_auteur`,
-		r.ID, a.ID, strings.TrimSpace(text), s.now()).Scan(&m.ID, &m.AuthorID, &m.AuthorPseudo, &m.Text, &m.At)
+			r.ID, a.ID, strings.TrimSpace(text), s.now()).Scan(&m.ID, &m.AuthorID, &m.AuthorPseudo, &m.Text, &m.At); err != nil {
+			return err
+		}
+		return s.notify(ctx, tx, NotifMessage, &a.ID, &r.ID, map[string]any{"auteur": m.AuthorPseudo}, r.Requester, r.Provider)
+	})
 	return m, err
 }
 
