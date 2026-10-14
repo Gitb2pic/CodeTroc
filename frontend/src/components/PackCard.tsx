@@ -15,7 +15,7 @@ export function PackCard({ pack, onOpen, as = 'button' }: { pack: Pack; onOpen?:
       <span style={{ display: 'flex', gap: 14, font: '12px var(--mono)', color: 'var(--tx2)' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="clock" size={13} />{pack.days} j</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="git-commit-horizontal" size={13} />{plural(pack.ms, 'jalon')}</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="list-checks" size={13} />{pack.crit} critères</span>
+        {pack.crit > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icon name="list-checks" size={13} />{pack.crit} critères</span>}
       </span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 12, borderTop: '1px solid var(--bd)' }}>
         <Avatar ini={pack.ini} size={28} ring={repRing(pack.rep)} fontSize={9} />

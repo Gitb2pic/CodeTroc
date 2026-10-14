@@ -366,7 +366,7 @@ Taille : S (≤ 1 j), M (2–3 j), L (4–5 j). Les écrans cités sont ceux du 
 - **Endpoints** : `PATCH /admin/utilisateurs/{id}`, file des litiges sans arbitre, suppression de compte (D13).
 - **Tests TDD** : seul ADMIN accède ; suspension = sessions révoquées ; anonymisation sans casser le grand livre.
 
-### F15 — Branchement du front · M
+### F15 — Branchement du front · M · **livré**
 
 - Client TypeScript généré depuis `openapi.yaml`, remplacement de
   `src/data/fixtures.ts` écran par écran, tests Playwright du parcours de démo

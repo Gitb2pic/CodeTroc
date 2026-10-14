@@ -2,3 +2,5 @@ node_modules
 dist
 *.local
 dist-artifact
+test-results
+playwright-report

@@ -1,6 +1,6 @@
 # Environnement local CodeTroc : PostgreSQL, migrations, API et Traefik.
 # Prérequis : ./scripts/dev-secrets.sh (génère ./secrets/).
-# API : http://localhost:8000/api/v1/health
+# Application : http://localhost:8000 · API : http://localhost:8000/api/v1/health
 name: codetroc
 
 services:
@@ -50,7 +50,7 @@ services:
       VAULT_KEK_FILE: /run/secrets/vault_kek
       TRUSTED_PROXIES: 172.30.0.0/24
       PUBLIC_URL: http://localhost:8000
-      FRONTEND_URL: http://localhost:5173/
+      FRONTEND_URL: http://localhost:8000/tableau-de-bord
       COOKIE_SECURE: "false"          # HTTP en local uniquement
       # Connexion GitHub (facultative en local) : à définir dans .env
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
@@ -73,6 +73,21 @@ services:
       - traefik.http.services.api.loadbalancer.healthcheck.path=/api/v1/health
       - traefik.http.services.api.loadbalancer.healthcheck.interval=10s
     networks: [edge, backend]
+
+  # Front (mode API) : même origine que l'API, pour le cookie de session SameSite=Strict.
+  web:
+    build: ./frontend
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.web.rule=PathPrefix(`/`)
+      - traefik.http.routers.web.priority=1
+      - traefik.http.routers.web.entrypoints=web
+      - traefik.http.services.web.loadbalancer.server.port=8080
+    networks: [edge]
 
   # Traitements différés ; une seule instance active à la fois (verrou PostgreSQL).
   worker:
