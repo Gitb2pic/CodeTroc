@@ -554,6 +554,150 @@ paths:
         '400': { $ref: '#/components/responses/Problem' }
         '401': { $ref: '#/components/responses/Problem' }
         '503': { $ref: '#/components/responses/Problem' }
+  /jalons/{id}/litiges:
+    post:
+      operationId: openDispute
+      summary: 'Contester un jalon livré (partie à l''échange) : gèle la libération'
+      tags: [litiges]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [motif]
+              properties:
+                motif: { type: string, minLength: 10, maxLength: 4000 }
+      responses:
+        '201':
+          description: Litige.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dispute' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /litiges:
+    get:
+      operationId: listDisputes
+      summary: 'Litiges qui me concernent (partie ou arbitre) ; file des litiges sans arbitre pour un admin'
+      tags: [litiges]
+      security: [{ bearer: [] }]
+      responses:
+        '200':
+          description: Litiges.
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Dispute' } }
+        '401': { $ref: '#/components/responses/Problem' }
+  /litiges/{id}:
+    get:
+      operationId: getDispute
+      summary: 'Détail d''un litige'
+      tags: [litiges]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Litige.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dispute' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /litiges/{id}/reponse:
+    post:
+      operationId: respondToDispute
+      summary: 'Répondre au litige (partie qui ne l''a pas ouvert, une fois)'
+      tags: [litiges]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reponse]
+              properties:
+                reponse: { type: string, maxLength: 4000 }
+      responses:
+        '200':
+          description: Litige.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dispute' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /litiges/{id}/affecter:
+    post:
+      operationId: assignDispute
+      summary: 'Affecter un arbitre (administrateur)'
+      tags: [litiges]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [id_arbitre]
+              properties:
+                id_arbitre: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Litige.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dispute' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /litiges/{id}/decision:
+    post:
+      operationId: decideDispute
+      summary: 'Rendre la décision motivée (arbitre affecté) : libérer, rembourser ou partager'
+      tags: [litiges]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [decision, justification]
+              properties:
+                decision: { type: string, enum: [LIBERER, REMBOURSER, PARTAGER] }
+                part_prestataire: { type: integer, minimum: 1, maximum: 99, description: 'Seulement pour PARTAGER.' }
+                justification: { type: string, minLength: 10, maxLength: 4000 }
+      responses:
+        '200':
+          description: Litige.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dispute' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /me/compte:
     get:
       operationId: getMyAccount
@@ -628,6 +772,26 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    Dispute:
+      type: object
+      additionalProperties: false
+      required: [id, id_echange, id_jalon, jalon, montant, ouvert_par, motif, reponse, id_arbitre, statut, decision, part_prestataire, justification, date_ouverture, date_cloture]
+      properties:
+        id: { type: string, format: uuid }
+        id_echange: { type: string, format: uuid }
+        id_jalon: { type: string, format: uuid }
+        jalon: { type: string }
+        montant: { type: integer }
+        ouvert_par: { type: string, format: uuid }
+        motif: { type: string }
+        reponse: { type: string, nullable: true }
+        id_arbitre: { type: string, format: uuid, nullable: true }
+        statut: { type: string, enum: [OUVERT, CLOS] }
+        decision: { type: string, enum: [LIBERER, REMBOURSER, PARTAGER], nullable: true }
+        part_prestataire: { type: integer, nullable: true }
+        justification: { type: string, nullable: true }
+        date_ouverture: { type: string, format: date-time }
+        date_cloture: { type: string, format: date-time, nullable: true }
     ExchangeStatus:
       type: string
       enum: [PROPOSE, REFUSE, EN_COURS, EN_LITIGE, TERMINE, ANNULE]

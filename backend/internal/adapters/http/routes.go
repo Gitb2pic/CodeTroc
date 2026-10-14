@@ -50,6 +50,14 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	m.POST("/jalons/:id/valider", idem, dl.validate)
 	v1.POST("/webhooks/github", dl.githubWebhook) // authentifié par signature HMAC
 
+	disp := disputeHandlers{svc: o.App}
+	m.POST("/jalons/:id/litiges", disp.open)
+	m.GET("/litiges", disp.list)
+	m.GET("/litiges/:id", disp.get)
+	m.POST("/litiges/:id/reponse", disp.respond)
+	m.POST("/litiges/:id/affecter", disp.assign)
+	m.POST("/litiges/:id/decision", idem, disp.decide)
+
 	credits := creditHandlers{svc: o.App}
 	m.GET("/me/compte", credits.balance)
 	m.GET("/me/compte/mouvements", credits.movements)
