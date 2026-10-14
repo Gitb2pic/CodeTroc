@@ -35,6 +35,15 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	pub.GET("/offres", cat.listOffers)
 	pub.GET("/offres/:id", cat.getOffer)
 
+	ex := exchangeHandlers{svc: o.App}
+	idem := idempotent(o.App)
+	m.POST("/echanges", ex.create)
+	m.GET("/echanges", ex.list)
+	m.GET("/echanges/:id", ex.get)
+	m.POST("/echanges/:id/accepter", idem, ex.accept)
+	m.POST("/echanges/:id/refuser", idem, ex.refuse)
+	m.POST("/echanges/:id/annuler", idem, ex.cancel)
+
 	credits := creditHandlers{svc: o.App}
 	m.GET("/me/compte", credits.balance)
 	m.GET("/me/compte/mouvements", credits.movements)

@@ -3,10 +3,14 @@ package app
 // Requêtes partagées, enrichies au fil des features.
 
 // balanceSQL calcule le solde disponible et les séquestres d'un membre.
-// Les séquestres sont ajoutés avec F6 (échanges).
 const balanceSQL = `
-	SELECT c.solde, 0::bigint, 0::bigint
+	SELECT c.solde,
+	  COALESCE((SELECT SUM(s.solde) FROM compte s JOIN echange e ON e.id_echange = s.id_echange WHERE e.id_demandeur = $1), 0)::bigint,
+	  COALESCE((SELECT SUM(s.solde) FROM compte s JOIN echange e ON e.id_echange = s.id_echange WHERE e.id_prestataire = $1), 0)::bigint
 	FROM compte c WHERE c.id_utilisateur = $1`
+
+// isArbiterOfExchangeSQL : l'utilisateur $2 arbitre un litige de l'échange $1 (F9).
+const isArbiterOfExchangeSQL = `($1::uuid IS NULL AND $2::uuid IS NULL)`
 
 // verifiedDeliveriesSQL compte les jalons libérés au profit de u (F8).
 const verifiedDeliveriesSQL = `SELECT 0`

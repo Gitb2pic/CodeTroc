@@ -12,7 +12,7 @@ paths:
   /health:
     get:
       operationId: getHealth
-      summary: Le processus est vivant
+      summary: 'Le processus est vivant'
       tags: [exploitation]
       responses:
         '200':
@@ -24,7 +24,7 @@ paths:
   /ready:
     get:
       operationId: getReady
-      summary: Le service peut traiter des requêtes (base joignable)
+      summary: 'Le service peut traiter des requêtes (base joignable)'
       tags: [exploitation]
       responses:
         '200':
@@ -38,7 +38,7 @@ paths:
   /auth/github/login:
     get:
       operationId: startGitHubLogin
-      summary: Redirige vers GitHub pour se connecter
+      summary: 'Redirige vers GitHub pour se connecter'
       tags: [auth]
       responses:
         '302':
@@ -48,7 +48,7 @@ paths:
   /auth/github/callback:
     get:
       operationId: completeGitHubLogin
-      summary: Retour de GitHub ; ouvre la session et redirige vers le front
+      summary: 'Retour de GitHub ; ouvre la session et redirige vers le front'
       tags: [auth]
       parameters:
         - { name: code, in: query, schema: { type: string } }
@@ -60,7 +60,7 @@ paths:
   /auth/refresh:
     post:
       operationId: refreshSession
-      summary: Échange le cookie ct_refresh contre un jeton d'accès (rotation)
+      summary: 'Échange le cookie ct_refresh contre un jeton d''accès (rotation)'
       tags: [auth]
       responses:
         '200':
@@ -73,7 +73,7 @@ paths:
   /auth/logout:
     post:
       operationId: logout
-      summary: Ferme la session (révoque la famille du jeton de rafraîchissement)
+      summary: 'Ferme la session (révoque la famille du jeton de rafraîchissement)'
       tags: [auth]
       responses:
         '204':
@@ -81,7 +81,7 @@ paths:
   /me:
     get:
       operationId: getMe
-      summary: Profil de l'utilisateur connecté
+      summary: 'Profil de l''utilisateur connecté'
       tags: [profil]
       security: [{ bearer: [] }]
       responses:
@@ -94,7 +94,7 @@ paths:
           $ref: '#/components/responses/Problem'
     patch:
       operationId: updateMe
-      summary: Modifier son pseudo ou sa bio (bio vide = effacée)
+      summary: 'Modifier son pseudo ou sa bio (bio vide = effacée)'
       tags: [profil]
       security: [{ bearer: [] }]
       requestBody:
@@ -119,7 +119,7 @@ paths:
   /me/competences:
     put:
       operationId: setMySkills
-      summary: Remplacer ses compétences déclarées
+      summary: 'Remplacer ses compétences déclarées'
       tags: [profil]
       security: [{ bearer: [] }]
       requestBody:
@@ -153,7 +153,7 @@ paths:
   /competences:
     get:
       operationId: listSkills
-      summary: Référentiel des compétences
+      summary: 'Référentiel des compétences'
       tags: [profil]
       responses:
         '401': { $ref: '#/components/responses/Problem' }
@@ -165,7 +165,7 @@ paths:
   /utilisateurs/{id}:
     get:
       operationId: getPublicProfile
-      summary: Profil public d'un membre (sans e-mail)
+      summary: 'Profil public d''un membre (sans e-mail)'
       tags: [profil]
       parameters: [{ $ref: '#/components/parameters/Id' }]
       responses:
@@ -179,7 +179,7 @@ paths:
   /packs:
     get:
       operationId: listPacks
-      summary: Catalogue des packs actifs
+      summary: 'Catalogue des packs actifs'
       tags: [catalogue]
       parameters:
         - { name: competence, in: query, schema: { type: string, format: uuid } }
@@ -202,7 +202,7 @@ paths:
         '400': { $ref: '#/components/responses/Problem' }
     post:
       operationId: createPack
-      summary: Créer un pack (administrateur)
+      summary: 'Créer un pack (administrateur)'
       tags: [catalogue]
       security: [{ bearer: [] }]
       requestBody:
@@ -223,7 +223,7 @@ paths:
   /packs/{id}:
     get:
       operationId: getPack
-      summary: Détail d'un pack
+      summary: 'Détail d''un pack'
       tags: [catalogue]
       parameters: [{ $ref: '#/components/parameters/Id' }]
       responses:
@@ -236,7 +236,7 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
     patch:
       operationId: updatePack
-      summary: Modifier un pack (administrateur)
+      summary: 'Modifier un pack (administrateur)'
       tags: [catalogue]
       security: [{ bearer: [] }]
       parameters: [{ $ref: '#/components/parameters/Id' }]
@@ -259,7 +259,7 @@ paths:
   /offres:
     get:
       operationId: listOffers
-      summary: Offres publiées (écran Catalogue)
+      summary: 'Offres publiées (écran Catalogue)'
       tags: [catalogue]
       parameters:
         - { name: pack, in: query, schema: { type: string, format: uuid } }
@@ -287,7 +287,7 @@ paths:
         '400': { $ref: '#/components/responses/Problem' }
     post:
       operationId: createOffer
-      summary: Publier une offre sur un pack
+      summary: 'Publier une offre sur un pack'
       tags: [catalogue]
       security: [{ bearer: [] }]
       requestBody:
@@ -307,7 +307,7 @@ paths:
   /offres/{id}:
     get:
       operationId: getOffer
-      summary: Détail d'une offre
+      summary: 'Détail d''une offre'
       tags: [catalogue]
       parameters: [{ $ref: '#/components/parameters/Id' }]
       responses:
@@ -321,7 +321,7 @@ paths:
   /offres/{id}/retirer:
     post:
       operationId: withdrawOffer
-      summary: Retirer son offre
+      summary: 'Retirer son offre'
       tags: [catalogue]
       security: [{ bearer: [] }]
       parameters: [{ $ref: '#/components/parameters/Id' }]
@@ -330,10 +330,140 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /echanges:
+    get:
+      operationId: listMyExchanges
+      summary: 'Mes échanges (demandeur ou prestataire)'
+      tags: [echanges]
+      security: [{ bearer: [] }]
+      parameters:
+        - { name: role, in: query, schema: { type: string, enum: [demandeur, prestataire] } }
+        - { name: statut, in: query, schema: { $ref: '#/components/schemas/ExchangeStatus' } }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Page d'échanges.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Exchange' } }
+                  next_cursor: { type: string, nullable: true }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: requestExchange
+      summary: 'Demander un échange à partir d''une offre (aucun crédit bloqué avant acceptation)'
+      tags: [echanges]
+      security: [{ bearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [id_offre, depot_url]
+              properties:
+                id_offre: { type: string, format: uuid }
+                depot_url: { type: string, example: 'https://github.com/acme/shop-api' }
+                besoin: { type: string, maxLength: 4000 }
+                jalons: { type: array, items: { $ref: '#/components/schemas/Milestone' }, description: 'Facultatif : jalons de l''offre par défaut.' }
+      responses:
+        '201':
+          description: Échange proposé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exchange' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}:
+    get:
+      operationId: getExchange
+      summary: 'Détail d''un échange (parties et arbitre)'
+      tags: [echanges]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Échange.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exchange' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/accepter:
+    post:
+      operationId: acceptExchange
+      summary: 'Accepter (prestataire) : bloque le montant en séquestre'
+      tags: [echanges]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '200':
+          description: Échange après l'action.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exchange' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/refuser:
+    post:
+      operationId: refuseExchange
+      summary: 'Refuser une demande (prestataire)'
+      tags: [echanges]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '200':
+          description: Échange après l'action.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exchange' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/annuler:
+    post:
+      operationId: cancelExchange
+      summary: 'Annuler (demandeur si proposé ; accord des deux parties ou abandon après échéance si en cours)'
+      tags: [echanges]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '200':
+          description: Échange après l'action.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exchange' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /me/compte:
     get:
       operationId: getMyAccount
-      summary: Solde disponible et crédits en séquestre
+      summary: 'Solde disponible et crédits en séquestre'
       tags: [credits]
       security: [{ bearer: [] }]
       responses:
@@ -347,7 +477,7 @@ paths:
   /me/compte/mouvements:
     get:
       operationId: listMyMovements
-      summary: Historique paginé des mouvements de crédits
+      summary: 'Historique paginé des mouvements de crédits'
       tags: [credits]
       security: [{ bearer: [] }]
       parameters:
@@ -380,6 +510,12 @@ components:
       name: limit
       in: query
       schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: 'Clé unique par action (8 à 100 caractères). Rejouer la même requête renvoie la même réponse.'
+      schema: { type: string, pattern: '^[A-Za-z0-9_-]{8,100}$' }
     Cursor:
       name: cursor
       in: query
@@ -398,6 +534,78 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    ExchangeStatus:
+      type: string
+      enum: [PROPOSE, REFUSE, EN_COURS, EN_LITIGE, TERMINE, ANNULE]
+    MilestoneStatus:
+      type: string
+      enum: [EN_ATTENTE, EN_COURS, LIVRE, CONTESTE, LIBERE, REMBOURSE, PARTAGE]
+    Proof:
+      type: object
+      additionalProperties: false
+      required: [id, type, pr_url, pr_numero, sha_commit, statut, detail, note, date_verification, date_creation]
+      properties:
+        id: { type: string, format: uuid }
+        type: { $ref: '#/components/schemas/ProofType' }
+        pr_url: { type: string, nullable: true }
+        pr_numero: { type: integer, nullable: true }
+        sha_commit: { type: string, nullable: true }
+        statut: { type: string, enum: [EN_ATTENTE, VALIDE, REJETEE] }
+        detail: { type: string, nullable: true }
+        note: { type: string, nullable: true }
+        date_verification: { type: string, format: date-time, nullable: true }
+        date_creation: { type: string, format: date-time }
+    ExchangeMilestone:
+      type: object
+      additionalProperties: false
+      required: [id, ordre, titre, montant, statut, echeance, date_livraison, date_cloture, preuves]
+      properties:
+        id: { type: string, format: uuid }
+        ordre: { type: integer }
+        titre: { type: string }
+        montant: { type: integer }
+        statut: { $ref: '#/components/schemas/MilestoneStatus' }
+        echeance: { type: string, format: date-time, nullable: true }
+        date_livraison: { type: string, format: date-time, nullable: true }
+        date_cloture: { type: string, format: date-time, nullable: true }
+        preuves: { type: array, items: { $ref: '#/components/schemas/Proof' } }
+    Exchange:
+      type: object
+      additionalProperties: false
+      required: [id, statut, montant_total, delai_jours, depot_url, besoin, date_creation, date_acceptation, date_cloture,
+                 annulation_demandee_par, demandeur, prestataire, offre, jalons, sequestre, a_qui_de_jouer]
+      properties:
+        id: { type: string, format: uuid }
+        statut: { $ref: '#/components/schemas/ExchangeStatus' }
+        montant_total: { type: integer }
+        delai_jours: { type: integer }
+        depot_url: { type: string }
+        besoin: { type: string }
+        date_creation: { type: string, format: date-time }
+        date_acceptation: { type: string, format: date-time, nullable: true }
+        date_cloture: { type: string, format: date-time, nullable: true }
+        annulation_demandee_par: { type: string, format: uuid, nullable: true }
+        demandeur: { $ref: '#/components/schemas/MemberSummary' }
+        prestataire: { $ref: '#/components/schemas/MemberSummary' }
+        offre:
+          type: object
+          additionalProperties: false
+          required: [id, titre, pack, type_preuve]
+          properties:
+            id: { type: string, format: uuid }
+            titre: { type: string }
+            pack: { type: string }
+            type_preuve: { $ref: '#/components/schemas/ProofType' }
+        jalons: { type: array, items: { $ref: '#/components/schemas/ExchangeMilestone' } }
+        sequestre:
+          type: object
+          additionalProperties: false
+          required: [bloque, libere, rembourse]
+          properties:
+            bloque: { type: integer }
+            libere: { type: integer }
+            rembourse: { type: integer }
+        a_qui_de_jouer: { type: string, enum: [DEMANDEUR, PRESTATAIRE, ARBITRE, AUCUN] }
     Level:
       type: string
       enum: [DEBUTANT, INTERMEDIAIRE, CONFIRME, EXPERT]
