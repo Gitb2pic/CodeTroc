@@ -6,6 +6,8 @@ interface SessionState {
   user: S['Me'] | null;
   login(): void;
   logout(): Promise<void>;
+  /** Relit la session depuis le cookie (bac à sable, après une connexion simulée). */
+  reload(): Promise<void>;
   setUser(u: S['Me']): void;
 }
 
@@ -50,15 +52,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setStatus('anonymous');
   }, []);
 
+  const reload = useCallback(async () => {
+    const s = await refreshSession();
+    setUser(s?.user ?? null);
+    setStatus(s ? 'authenticated' : 'anonymous');
+  }, []);
+
   const value = useMemo<SessionState>(
     () => ({
       status,
       user,
       login: () => window.location.assign(LOGIN_URL),
       logout,
+      reload,
       setUser: (u) => setUser(u),
     }),
-    [status, user, logout],
+    [status, user, logout, reload],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
