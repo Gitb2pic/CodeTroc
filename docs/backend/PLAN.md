@@ -24,7 +24,7 @@
 
 | Besoin | Choix | Pourquoi |
 |---|---|---|
-| Langage | Go 1.24 | Typage fort, binaire unique, concurrence simple pour le worker |
+| Langage | Go 1.25 | Typage fort, binaire unique, concurrence simple pour le worker |
 | HTTP | Gin | Demandé ; routeur rapide, middlewares simples |
 | Base | PostgreSQL 16 | Transactions ACID, contraintes CHECK, index partiels, verrous `FOR UPDATE` |
 | Accès SQL | pgx v5 + **sqlc** | SQL écrit à la main et vérifié à la compilation ; pas d'ORM qui masque les verrous |
@@ -35,7 +35,7 @@
 | Logs | `log/slog` (JSON) + identifiant de requête | Bibliothèque standard, corrélation avec Traefik |
 | Métriques | Prometheus (client_golang) | Déjà prévu dans la doc technique |
 | Doc API | OpenAPI 3.1 écrit en premier (`api/openapi.yaml`) | Contrat partagé avec le front React ; client TypeScript généré |
-| Tests | `testing` + testify, **rapid** (tests de propriétés), testcontainers-go (Postgres réel), `httptest`, fuzzing natif Go | Voir section 5 |
+| Tests | `testing` + testify, **rapid** (tests de propriétés), PostgreSQL réel (service CI, `CODETROC_TEST_DATABASE_URL`), `httptest`, fuzzing natif Go | Voir section 5 |
 | Qualité / sécurité | golangci-lint (dont gosec, errcheck, staticcheck), govulncheck, gitleaks, Trivy, OWASP ZAP | Voir section 6 |
 | Exécution | Docker multi-stage (image distroless, utilisateur non root) + Docker Compose + Traefik | Conforme à la section 14 de la doc technique |
 
@@ -151,7 +151,7 @@ la précédente est mergée.
 | Unitaires domaine | `testing`, testify | Règles, transitions, ledger, sans base | `LIVRE → REMBOURSE` est refusé |
 | Propriétés | rapid | Invariants sur des séquences aléatoires | Après N opérations, la somme des soldes vaut 0 et aucun solde utilisateur n'est négatif |
 | Fuzzing | `go test -fuzz` | Entrées hostiles | Parseur d'URL de PR, payload de webhook, en-têtes de signature |
-| Intégration | testcontainers-go (PostgreSQL 16) | Repositories, contraintes SQL, verrous | Deux acceptations concurrentes ne créent qu'un mouvement |
+| Intégration | PostgreSQL 16 réel (service de la CI, base locale en dev) | Repositories, contraintes SQL, verrous | Deux acceptations concurrentes ne créent qu'un mouvement |
 | API | `httptest` + routeur Gin réel | Codes HTTP, format RFC 9457, autorisations | Un tiers reçoit 404 sur `GET /echanges/{id}` |
 | Contrat | validation des réponses contre `openapi.yaml` | Dérive entre code et contrat | Champ manquant ou en trop = échec |
 | Webhooks | charges utiles GitHub enregistrées (`testdata/`) | Signature, doublons, CI en échec | Signature invalide → 401, livraison rejouée → ignorée |
