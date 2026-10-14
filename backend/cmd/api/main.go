@@ -16,6 +16,7 @@ import (
 	"github.com/gitb2pic/codetroc/backend/internal/adapters/postgres"
 	"github.com/gitb2pic/codetroc/backend/internal/platform/config"
 	"github.com/gitb2pic/codetroc/backend/internal/platform/logging"
+	"github.com/gitb2pic/codetroc/backend/internal/wiring"
 )
 
 const shutdownTimeout = 15 * time.Second
@@ -44,7 +45,7 @@ func run() error {
 	}
 	defer pool.Close()
 
-	svc, err := buildService(cfg, pool, logger)
+	svc, err := wiring.Service(cfg, pool, logger)
 	if err != nil {
 		return err
 	}

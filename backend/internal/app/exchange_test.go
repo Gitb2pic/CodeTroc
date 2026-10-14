@@ -278,7 +278,7 @@ func TestGetAndListExchanges(t *testing.T) {
 	requireKind(t, err, KindNotFound, "")
 	admin := e.setRole(t, sc.tiers, RoleAdmin)
 	_, err = e.svc.GetExchange(ctx, admin, x.ID)
-	requireKind(t, err, KindNotFound, "", ) // même un admin ne lit pas un échange dont il n'est pas partie
+	requireKind(t, err, KindNotFound, "") // même un admin ne lit pas un échange dont il n'est pas partie
 
 	mine, err := e.svc.ListExchanges(ctx, sc.sami, ExchangeFilter{Role: "demandeur"}, 20, "")
 	require.NoError(t, err)

@@ -13,7 +13,9 @@ const balanceSQL = `
 const isArbiterOfExchangeSQL = `($1::uuid IS NULL AND $2::uuid IS NULL)`
 
 // verifiedDeliveriesSQL compte les jalons libérés au profit de u (F8).
-const verifiedDeliveriesSQL = `SELECT 0`
+const verifiedDeliveriesSQL = `
+	SELECT count(*)::int FROM jalon j JOIN echange e USING (id_echange)
+	WHERE e.id_prestataire = u.id_utilisateur AND j.statut_jalon IN ('LIBERE', 'PARTAGE')`
 
 // reviewsCountSQL compte les avis reçus par u (F10).
 const reviewsCountSQL = `SELECT 0`

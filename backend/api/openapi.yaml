@@ -460,6 +460,100 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+  /jalons/{id}/preuves:
+    post:
+      operationId: submitProof
+      summary: 'Livrer le jalon en cours (prestataire) : URL de PR pour un pack PR_CI, note pour un pack MANUELLE'
+      tags: [livraison]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                pr_url: { type: string, example: 'https://github.com/acme/shop-api/pull/42' }
+                note: { type: string, maxLength: 2000 }
+      responses:
+        '201':
+          description: Échange mis à jour.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exchange' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /jalons/{id}/reverifier:
+    post:
+      operationId: reverifyMilestone
+      summary: 'Relancer la vérification GitHub des preuves du jalon'
+      tags: [livraison]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Échange mis à jour.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exchange' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /jalons/{id}/valider:
+    post:
+      operationId: validateMilestone
+      summary: 'Valider un jalon livré et libérer ses crédits (demandeur)'
+      tags: [livraison]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '200':
+          description: Échange mis à jour.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exchange' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /webhooks/github:
+    post:
+      operationId: githubWebhook
+      summary: 'Réception des webhooks de la GitHub App (pull_request, check_suite, check_run)'
+      tags: [livraison]
+      parameters:
+        - { name: X-Hub-Signature-256, in: header, required: true, schema: { type: string } }
+        - { name: X-GitHub-Delivery, in: header, required: true, schema: { type: string } }
+        - { name: X-GitHub-Event, in: header, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '202':
+          description: Webhook traité.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [doublon, preuves_verifiees]
+                properties:
+                  doublon: { type: boolean }
+                  preuves_verifiees: { type: integer }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
   /me/compte:
     get:
       operationId: getMyAccount

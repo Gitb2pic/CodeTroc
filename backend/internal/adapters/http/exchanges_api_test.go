@@ -31,7 +31,9 @@ func (e *apiEnv) requestExchange(requester member, offerID string) exchangeJSON 
 	return decode[exchangeJSON](e.t, w)
 }
 
-func idemKey() map[string]string { return map[string]string{idempotencyHeader: "k-" + uuid.NewString()} }
+func idemKey() map[string]string {
+	return map[string]string{idempotencyHeader: "k-" + uuid.NewString()}
+}
 
 func TestExchangesAPI_Lifecycle(t *testing.T) {
 	e := newAPI(t)

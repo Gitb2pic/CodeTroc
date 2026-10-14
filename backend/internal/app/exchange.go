@@ -15,12 +15,12 @@ import (
 )
 
 var (
-	errTransition      = conflict("transition-interdite", "Cette action n'est pas possible dans l'état actuel de l'échange.")
-	errOfferUnavail    = unprocessable("offre-indisponible", "Cette offre n'existe pas ou n'est plus publiée.")
-	errOwnOffer        = unprocessable("propre-offre", "Tu ne peux pas demander ta propre offre (RG09).")
-	errRepoURL         = invalid("depot-invalide", exchange.ErrRepoURL.Error())
-	errMilestonePend   = conflict("jalon-a-trancher", "Un jalon livré ou contesté doit d'abord être validé ou arbitré.")
-	errNeedTooLong     = invalid("donnees-invalides", "besoin : 4000 caractères maximum")
+	errTransition    = conflict("transition-interdite", "Cette action n'est pas possible dans l'état actuel de l'échange.")
+	errOfferUnavail  = unprocessable("offre-indisponible", "Cette offre n'existe pas ou n'est plus publiée.")
+	errOwnOffer      = unprocessable("propre-offre", "Tu ne peux pas demander ta propre offre (RG09).")
+	errRepoURL       = invalid("depot-invalide", exchange.ErrRepoURL.Error())
+	errMilestonePend = conflict("jalon-a-trancher", "Un jalon livré ou contesté doit d'abord être validé ou arbitré.")
+	errNeedTooLong   = invalid("donnees-invalides", "besoin : 4000 caractères maximum")
 )
 
 // querier est commun au pool et aux transactions.

@@ -15,3 +15,6 @@ func (s *Service) onUserCreated(ctx context.Context, tx pgx.Tx, userID uuid.UUID
 // onExchangeClosed s'exécute dans la transaction qui termine ou annule un
 // échange (révocation des secrets du coffre avec F12).
 func (s *Service) onExchangeClosed(context.Context, pgx.Tx, uuid.UUID) error { return nil }
+
+// ExpireSecrets révoque les secrets du coffre arrivés à expiration (F12).
+func (s *Service) ExpireSecrets(context.Context) (int, error) { return 0, nil }
