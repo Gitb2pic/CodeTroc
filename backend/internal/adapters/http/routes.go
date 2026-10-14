@@ -18,6 +18,7 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 
 	m := v1.Group("", requireAuth(o.App))
 	m.GET("/me", auth.me)
+	m.DELETE("/me", auth.deleteMe)
 
 	cat := catalogHandlers{svc: o.App}
 	m.PATCH("/me", cat.updateMe)
@@ -75,6 +76,11 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	m.GET("/notifications", notif.list)
 	m.GET("/notifications/compteur", notif.count)
 	m.POST("/notifications/lire", notif.markRead)
+
+	adm := adminHandlers{svc: o.App} // le rôle ADMIN est vérifié par le service
+	m.GET("/admin/utilisateurs", adm.listUsers)
+	m.PATCH("/admin/utilisateurs/:id", adm.updateUser)
+	m.GET("/admin/litiges", adm.disputeQueue)
 
 	credits := creditHandlers{svc: o.App}
 	m.GET("/me/compte", credits.balance)

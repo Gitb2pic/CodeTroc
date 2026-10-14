@@ -79,6 +79,16 @@ func (s *Service) createUserAccount(ctx context.Context, tx pgx.Tx, userID uuid.
 	if s.settings.WelcomeBonus <= 0 {
 		return nil
 	}
+	// D13 : pas de second bonus pour un compte GitHub déjà inscrit puis supprimé.
+	var returning bool
+	if err := tx.QueryRow(ctx, `
+		SELECT EXISTS (SELECT 1 FROM github_supprime g JOIN utilisateur u ON g.empreinte = sha256(u.github_id::text::bytea)
+		               WHERE u.id_utilisateur = $1)`, userID).Scan(&returning); err != nil {
+		return err
+	}
+	if returning {
+		return nil
+	}
 	if err := tx.QueryRow(ctx, `SELECT id_compte FROM compte WHERE type_compte = 'EMISSION'`).Scan(&issuance); err != nil {
 		return err
 	}

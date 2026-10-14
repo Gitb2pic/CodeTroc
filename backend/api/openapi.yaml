@@ -92,6 +92,15 @@ paths:
               schema: { $ref: '#/components/schemas/Me' }
         '401':
           $ref: '#/components/responses/Problem'
+    delete:
+      operationId: deleteMe
+      summary: 'Supprimer son compte (anonymisation, D13 ; refusé si un échange est en cours)'
+      tags: [profil]
+      security: [{ bearer: [] }]
+      responses:
+        '204': { description: 'Compte anonymisé, session fermée.' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
     patch:
       operationId: updateMe
       summary: 'Modifier son pseudo ou sa bio (bio vide = effacée)'
@@ -1027,6 +1036,74 @@ paths:
                   marquees: { type: integer, minimum: 0 }
         '400': { $ref: '#/components/responses/Problem' }
         '401': { $ref: '#/components/responses/Problem' }
+  /admin/utilisateurs:
+    get:
+      operationId: adminListUsers
+      summary: 'Rechercher des membres (administrateur)'
+      tags: [administration]
+      security: [{ bearer: [] }]
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Page de membres.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/AdminUser' } }
+                  next_cursor: { type: string, nullable: true }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/utilisateurs/{id}:
+    patch:
+      operationId: adminUpdateUser
+      summary: 'Changer le rôle ou suspendre un membre (administrateur, jamais soi-même)'
+      tags: [administration]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                role: { type: string, enum: [MEMBRE, ARBITRE, ADMIN] }
+                statut: { type: string, enum: [ACTIF, SUSPENDU] }
+      responses:
+        '200':
+          description: Membre modifié.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUser' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /admin/litiges:
+    get:
+      operationId: adminDisputeQueue
+      summary: 'Litiges ouverts sans arbitre (administrateur)'
+      tags: [administration]
+      security: [{ bearer: [] }]
+      responses:
+        '200':
+          description: File d'attente.
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Dispute' } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
 components:
   parameters:
     Id:
@@ -1372,6 +1449,20 @@ components:
         token_type: { type: string, enum: [Bearer] }
         expires_in: { type: integer, description: Durée de validité en secondes. }
         user: { $ref: '#/components/schemas/Me' }
+    AdminUser:
+      type: object
+      additionalProperties: false
+      required: [id, pseudo, github_login, role, score_reputation, date_inscription, email, bio, statut]
+      properties:
+        id: { type: string, format: uuid }
+        pseudo: { type: string }
+        email: { type: string, nullable: true }
+        github_login: { type: string }
+        bio: { type: string, nullable: true }
+        role: { type: string, enum: [MEMBRE, ARBITRE, ADMIN] }
+        score_reputation: { type: number }
+        date_inscription: { type: string, format: date-time }
+        statut: { type: string, enum: [ACTIF, SUSPENDU, SUPPRIME] }
     Me:
       type: object
       additionalProperties: false

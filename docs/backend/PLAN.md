@@ -361,7 +361,7 @@ Taille : S (≤ 1 j), M (2–3 j), L (4–5 j). Les écrans cités sont ceux du 
 - **Contenu** : événements de domaine (jalon livré, CI, crédits, accès, litige) enregistrés dans la même transaction que l'action (outbox).
 - **Tests TDD** : chaque événement crée la bonne notification pour le bon destinataire ; « tout marquer comme lu ».
 
-### F14 — Administration et modération · S
+### F14 — Administration et modération · S · **livré**
 
 - **Endpoints** : `PATCH /admin/utilisateurs/{id}`, file des litiges sans arbitre, suppression de compte (D13).
 - **Tests TDD** : seul ADMIN accède ; suspension = sessions révoquées ; anonymisation sans casser le grand livre.
