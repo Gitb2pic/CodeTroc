@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -102,6 +103,8 @@ func (s *Service) CompleteLogin(ctx context.Context, stateParam, stateCookie, co
 
 	id, err := s.oauth.Exchange(ctx, code)
 	if err != nil {
+		// Cause côté serveur (secret client erroné, code expiré…) : seul le journal la voit.
+		slog.WarnContext(ctx, "connexion GitHub refusée", slog.String("error", err.Error()))
 		return Session{}, errGitHubRefused
 	}
 	if min := s.settings.MinGitHubAccountAge; min > 0 && s.now().Sub(id.CreatedAt) < min {

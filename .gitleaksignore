@@ -1,0 +1,2 @@
+# Fausse clé JWT de test (0123…cdef), commitée avant l'annotation gitleaks:allow.
+a7a0bb80ea7392e7c11ffaa4ef93274ddedcb7a1:backend/internal/platform/config/config_test.go:generic-api-key:98

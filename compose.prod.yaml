@@ -75,9 +75,10 @@ services:
     secrets: [database_url, jwt_key, vault_kek, github_client_secret, github_app_private_key, github_webhook_secret]
 
   web:
+    # Le site ne capte jamais /api : API arrêtée = 404 de Traefik, pas la landing.
     restart: unless-stopped
     labels:
-      - traefik.http.routers.web.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.web.rule=Host(`${DOMAIN}`) && !PathPrefix(`/api`)
       - traefik.http.routers.web.entrypoints=websecure
       - traefik.http.routers.web.tls.certresolver=le
       - traefik.http.routers.web.middlewares=hsts@docker

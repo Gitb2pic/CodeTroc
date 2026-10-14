@@ -57,7 +57,7 @@ jobs:
       - uses: actions/setup-go@v5
         with: { go-version-file: backend/go.mod, cache-dependency-path: backend/go.sum }
       - name: govulncheck
-        run: go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
       - name: gitleaks
         working-directory: .
         run: |
@@ -75,7 +75,7 @@ jobs:
         working-directory: .
         run: ./scripts/dev-secrets.sh && docker compose config -q
       - name: trivy
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: codetroc-api:${{ github.sha }}
           severity: CRITICAL
