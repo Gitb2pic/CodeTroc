@@ -56,11 +56,16 @@ type deliveryEnv struct {
 
 func newDeliveryEnv(t *testing.T) deliveryEnv {
 	t.Helper()
+	return newDeliveryEnvWith(t)
+}
+
+func newDeliveryEnvWith(t *testing.T, mutate ...func(*app.Deps, *Options)) deliveryEnv {
+	t.Helper()
 	gh := &stubGitHub{pulls: map[int]app.PullRequest{}, checks: map[string][]app.CheckRun{}}
-	e := newAPI(t, func(d *app.Deps, o *Options) {
+	e := newAPI(t, append([]func(*app.Deps, *Options){func(d *app.Deps, o *Options) {
 		d.GitHub = gh
 		o.Webhooks = &WebhookConfig{Secret: []byte(webhookSecret)}
-	})
+	}}, mutate...)...)
 	lea, sami, bob := e.login("lea"), e.login("sami"), e.login("bob")
 	e.fund(sami, 310)
 	offer := e.publishOffer(lea, 120)

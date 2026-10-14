@@ -64,6 +64,13 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	m.GET("/echanges/:id/messages", soc.listMessages)
 	m.POST("/echanges/:id/messages", soc.postMessage)
 
+	vault := vaultHandlers{svc: o.App}
+	m.GET("/echanges/:id/secrets", vault.list)
+	m.POST("/echanges/:id/secrets", vault.share)
+	m.POST("/secrets/:id/reveler", vault.reveal) // pas d'idempotence : la réponse contient le secret
+	m.POST("/secrets/:id/revoquer", vault.revoke)
+	m.GET("/secrets/:id/journal", vault.journal)
+
 	credits := creditHandlers{svc: o.App}
 	m.GET("/me/compte", credits.balance)
 	m.GET("/me/compte/mouvements", credits.movements)

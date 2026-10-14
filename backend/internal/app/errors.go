@@ -12,6 +12,7 @@ const (
 	KindNotFound                        // 404 : inexistante ou invisible pour l'appelant (D11)
 	KindConflict                        // 409 : incompatible avec l'état courant
 	KindUnprocessable                   // 422 : règle métier non respectée
+	KindGone                            // 410 : ressource définitivement indisponible
 	KindUnavailable                     // 503
 )
 

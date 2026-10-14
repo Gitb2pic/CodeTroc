@@ -232,7 +232,7 @@ avec sévérité (CVSS), correctif et test de non-régression.
 
 Taille : S (≤ 1 j), M (2–3 j), L (4–5 j). Les écrans cités sont ceux du front.
 
-### F0 — Socle technique · M
+### F0 — Socle technique · M · **livré**
 
 - **Objectif** : un service qui démarre, se teste et se déploie, sans métier.
 - **Contenu** : arborescence, config, `slog`, request id, erreurs RFC 9457,
@@ -243,7 +243,7 @@ Taille : S (≤ 1 j), M (2–3 j), L (4–5 j). Les écrans cités sont ceux du 
   la config refuse de démarrer sans secret obligatoire.
 - **Sécurité** : en-têtes de sécurité, taille de corps limitée, docs OpenAPI désactivées en production.
 
-### F1 — Connexion GitHub et session · M · écran Onboarding
+### F1 — Connexion GitHub et session · M · écran Onboarding · **livré**
 
 - **Endpoints** : `GET /auth/github/login`, `GET /auth/github/callback`,
   `POST /auth/refresh`, `POST /auth/logout`, `GET /me`.
@@ -255,7 +255,7 @@ Taille : S (≤ 1 j), M (2–3 j), L (4–5 j). Les écrans cités sont ceux du 
   JWT expiré ou mal signé → 401.
 - **Pentest** : CSRF OAuth, vol et rejeu de refresh, `alg: none`.
 
-### F2 — Grand livre et comptes · L · écrans Portefeuille, barre de solde
+### F2 — Grand livre et comptes · L · écrans Portefeuille, barre de solde · **livré**
 
 - **Endpoints** : `GET /me/compte`, `GET /me/compte/mouvements` (paginé).
 - **Règles** : RG02 à RG05 ; D1 à D4.
@@ -269,26 +269,26 @@ Taille : S (≤ 1 j), M (2–3 j), L (4–5 j). Les écrans cités sont ceux du 
   - bonus de bienvenue versé exactement une fois.
 - **Pentest** : course sur le solde, double bonus.
 
-### F3 — Profil et compétences · S · écrans Onboarding, Profil
+### F3 — Profil et compétences · S · écrans Onboarding, Profil · **livré**
 
 - **Endpoints** : `PATCH /me`, `PUT /me/competences`, `GET /competences`, `GET /utilisateurs/{id}`.
 - **Tests TDD** : niveaux valides seulement ; remplacement atomique de la liste ; profil public sans e-mail.
 - **Pentest** : mass assignment sur `role`, XSS stocké dans `bio` (échappement côté front, longueur bornée côté API).
 
-### F4 — Catalogue de packs · M · écrans Catalogue, Détail du pack
+### F4 — Catalogue de packs · M · écrans Catalogue, Détail du pack · **livré**
 
 - **Endpoints** : `GET /packs` (filtres stack, prix, délai, réputation ; pagination par curseur), `GET /packs/{id}`, `POST/PATCH /packs` (admin).
 - **Règles** : RG07 ; D7.
 - **Tests TDD** : `prix_min ≤ prix_max` ; au moins une compétence ; filtres combinés ; curseur stable ; pack inactif invisible.
 - **Pentest** : création de pack par un membre, injection dans les filtres.
 
-### F5 — Offres · S · écrans Création d'un pack, Profil
+### F5 — Offres · S · écrans Création d'un pack, Profil · **livré**
 
 - **Endpoints** : `GET /offres`, `POST /offres`, `POST /offres/{id}/retirer`.
 - **Règles** : RG08.
 - **Tests TDD** : prix dans la fourchette du pack ; seul l'auteur retire ; offre retirée invisible.
 
-### F6 — Échanges : demande, acceptation, séquestre · L · écrans Espace d'échange, Tableau de bord
+### F6 — Échanges : demande, acceptation, séquestre · L · écrans Espace d'échange, Tableau de bord · **livré**
 
 - **Endpoints** : `POST /echanges`, `GET /echanges`, `GET /echanges/{id}`,
   `POST /echanges/{id}/accepter|refuser|annuler`.
@@ -300,7 +300,7 @@ Taille : S (≤ 1 j), M (2–3 j), L (4–5 j). Les écrans cités sont ceux du 
   jalons non libérés ; `depot_url` limité à `https://github.com/{owner}/{repo}`.
 - **Pentest** : BOLA sur les échanges, course sur l'acceptation, SSRF.
 
-### F7 — Preuves GitHub et webhooks · L · écran Espace d'échange (bloc PR + checks)
+### F7 — Preuves GitHub et webhooks · L · écran Espace d'échange (bloc PR + checks) · **livré**
 
 - **Endpoints** : `POST /jalons/{id}/preuves`, `POST /jalons/{id}/reverifier`, `POST /webhooks/github`.
 - **Règles** : RG12, RG13 ; D5, D6, D7.
@@ -312,7 +312,7 @@ Taille : S (≤ 1 j), M (2–3 j), L (4–5 j). Les écrans cités sont ceux du 
 - **Fuzzing** : parseur d'URL de PR, décodage des payloads.
 - **Pentest** : webhook forgé ou rejoué, PR d'un autre auteur ou d'un autre dépôt.
 
-### F8 — Validation, libération, délais · M · écrans Espace d'échange, Portefeuille
+### F8 — Validation, libération, délais · M · écrans Espace d'échange, Portefeuille · **livré**
 
 - **Endpoints** : `POST /jalons/{id}/valider` ; worker.
 - **Règles** : RG14, RG21 ; D8.
@@ -323,7 +323,7 @@ Taille : S (≤ 1 j), M (2–3 j), L (4–5 j). Les écrans cités sont ceux du 
   (verrou consultatif).
 - **Pentest** : validation par le prestataire, double libération concurrente.
 
-### F9 — Litiges et arbitrage · M · écran Litige et arbitrage
+### F9 — Litiges et arbitrage · M · écran Litige et arbitrage · **livré**
 
 - **Endpoints** : `POST /jalons/{id}/litiges`, `GET /litiges`, `POST /litiges/{id}/decision`.
 - **Règles** : RG15 à RG17 ; D9, D10.
@@ -332,19 +332,19 @@ Taille : S (≤ 1 j), M (2–3 j), L (4–5 j). Les écrans cités sont ceux du 
   propriété : la somme des parts = montant du jalon ; aucun arbitre → file admin.
 - **Pentest** : décision par un non-arbitre, arbitre partie prenante.
 
-### F10 — Avis et réputation · S · écrans Profil, Tableau de bord
+### F10 — Avis et réputation · S · écrans Profil, Tableau de bord · **livré**
 
 - **Endpoints** : `POST /echanges/{id}/avis`.
 - **Règles** : RG20, RG21.
 - **Tests TDD** : un avis par partie et par échange, seulement si TERMINE ; note 1–5 ; calcul de réputation déterministe.
 
-### F11 — Messagerie d'échange · S · écran Espace d'échange (Discussion)
+### F11 — Messagerie d'échange · S · écran Espace d'échange (Discussion) · **livré**
 
 - **Endpoints** : `GET/POST /echanges/{id}/messages`.
 - **Règles** : RG22.
 - **Tests TDD** : seules les parties écrivent ; l'arbitre lit pendant un litige ; 5 000 caractères max ; pagination.
 
-### F12 — Coffre d'accès · L · écran Coffre d'accès
+### F12 — Coffre d'accès · L · écran Coffre d'accès · **livré**
 
 - **Endpoints** : `GET/POST /echanges/{id}/secrets`, `POST /secrets/{id}/reveler|revoquer` ; worker d'expiration.
 - **Règles** : RG19.

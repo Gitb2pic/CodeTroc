@@ -95,7 +95,7 @@ func TestLoad_RejectsInvalidValues(t *testing.T) {
 	}
 }
 
-const jwtKey = "0123456789abcdef0123456789abcdef"
+const jwtKey = "0123456789abcdef0123456789abcdef" // gitleaks:allow (clé de test)
 
 func base(extra map[string]string) map[string]string {
 	m := map[string]string{"DATABASE_URL": "postgres://db", "JWT_SIGNING_KEY": jwtKey}

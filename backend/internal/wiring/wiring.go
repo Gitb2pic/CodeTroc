@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	ghadapter "github.com/gitb2pic/codetroc/backend/internal/adapters/github"
+	"github.com/gitb2pic/codetroc/backend/internal/adapters/vault"
 	"github.com/gitb2pic/codetroc/backend/internal/app"
 	"github.com/gitb2pic/codetroc/backend/internal/platform/config"
 	"github.com/gitb2pic/codetroc/backend/internal/platform/token"
@@ -40,6 +41,15 @@ func Service(cfg config.Config, pool *pgxpool.Pool, logger *slog.Logger) (*app.S
 		deps.GitHub = gh
 	} else {
 		logger.Warn("GitHub App non configurée : les preuves PR resteront en attente")
+	}
+	if len(cfg.VaultKEK) > 0 {
+		v, err := vault.New(map[int][]byte{1: cfg.VaultKEK}, 1)
+		if err != nil {
+			return nil, err
+		}
+		deps.Vault = v
+	} else {
+		logger.Warn("coffre non configuré (VAULT_KEK absent) : partage de secrets désactivé")
 	}
 	return app.New(deps), nil
 }

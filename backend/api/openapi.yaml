@@ -839,6 +839,124 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/secrets:
+    get:
+      operationId: listSecrets
+      summary: 'Secrets de l''échange (métadonnées seulement, parties)'
+      tags: [coffre]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Secrets, sans leur valeur.
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Secret' } }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: shareSecret
+      summary: 'Déposer un secret chiffré (demandeur, échange en cours ou en litige)'
+      tags: [coffre]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [libelle, type, valeur, date_expiration]
+              properties:
+                libelle: { type: string, maxLength: 100 }
+                type: { type: string, enum: [JETON, CLE_API, MOT_DE_PASSE, AUTRE] }
+                portee: { type: string, maxLength: 300 }
+                valeur: { type: string, minLength: 1, maxLength: 8192, writeOnly: true }
+                date_expiration: { type: string, format: date-time, description: '30 jours au plus' }
+      responses:
+        '201':
+          description: Secret déposé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Secret' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /secrets/{id}/reveler:
+    post:
+      operationId: revealSecret
+      summary: 'Révéler la valeur (prestataire ; accès journalisé, réponse non mise en cache)'
+      tags: [coffre]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Valeur en clair.
+          headers:
+            Cache-Control: { schema: { type: string, enum: [no-store] } }
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [valeur]
+                properties:
+                  valeur: { type: string }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '410': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /secrets/{id}/revoquer:
+    post:
+      operationId: revokeSecret
+      summary: 'Révoquer un secret (déposant) ; la matière chiffrée est effacée'
+      tags: [coffre]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Secret révoqué.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Secret' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /secrets/{id}/journal:
+    get:
+      operationId: getSecretJournal
+      summary: 'Journal d''accès d''un secret (parties)'
+      tags: [coffre]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Entrées, de la plus ancienne à la plus récente.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [action, id_utilisateur, pseudo, ip, date]
+                  properties:
+                    action: { type: string, enum: [CREATION, REVELATION, REFUS, REVOCATION, EXPIRATION] }
+                    id_utilisateur: { type: string, format: uuid, nullable: true }
+                    pseudo: { type: string, nullable: true }
+                    ip: { type: string }
+                    date: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
 components:
   parameters:
     Id:
@@ -874,6 +992,21 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    Secret:
+      type: object
+      additionalProperties: false
+      required: [id, id_echange, id_deposant, libelle, type, portee, statut, date_expiration, date_revocation, date_creation]
+      properties:
+        id: { type: string, format: uuid }
+        id_echange: { type: string, format: uuid }
+        id_deposant: { type: string, format: uuid }
+        libelle: { type: string }
+        type: { type: string, enum: [JETON, CLE_API, MOT_DE_PASSE, AUTRE] }
+        portee: { type: string, nullable: true }
+        statut: { type: string, enum: [ACTIF, EXPIRE, REVOQUE] }
+        date_expiration: { type: string, format: date-time }
+        date_revocation: { type: string, format: date-time, nullable: true }
+        date_creation: { type: string, format: date-time }
     Review:
       type: object
       additionalProperties: false

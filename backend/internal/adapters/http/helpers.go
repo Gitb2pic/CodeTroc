@@ -21,6 +21,7 @@ var kindStatus = map[app.Kind]int{
 	app.KindNotFound:        http.StatusNotFound,
 	app.KindConflict:        http.StatusConflict,
 	app.KindUnprocessable:   http.StatusUnprocessableEntity,
+	app.KindGone:            http.StatusGone,
 	app.KindUnavailable:     http.StatusServiceUnavailable,
 }
 

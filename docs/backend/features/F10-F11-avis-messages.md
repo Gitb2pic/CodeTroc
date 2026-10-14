@@ -11,7 +11,7 @@ Statut : **livré**.
 
 - Le **destinataire est déduit** par le serveur (l'autre partie) : un champ `id_destinataire` envoyé par le client est rejeté (décodage strict → 400).
 - Note entière 1..5, commentaire facultatif ≤ 2000 caractères ; contraintes doublées en base (`CHECK`, `UNIQUE (id_echange, id_auteur)`, `CHECK auteur <> destinataire`).
-- RG21 : `score_reputation` = moyenne des notes reçues arrondie au centième, recalculée **dans la même transaction** que l'insertion de l'avis. Le profil public expose aussi `nb_avis`.
+- RG21 : `score_reputation` = moyenne des notes reçues arrondie au centième, recalculée **dans la même transaction** que l'insertion de l'avis. Le profil public expose aussi `avis_recus`.
 
 ## F11 — Messages (RG22)
 
