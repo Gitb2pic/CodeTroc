@@ -737,6 +737,108 @@ paths:
           $ref: '#/components/responses/Problem'
         '401':
           $ref: '#/components/responses/Problem'
+  /echanges/{id}/avis:
+    post:
+      operationId: leaveReview
+      summary: 'Laisser un avis sur l''autre partie (échange terminé, une fois)'
+      tags: [avis]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [note]
+              properties:
+                note: { type: integer, minimum: 1, maximum: 5 }
+                commentaire: { type: string, maxLength: 2000 }
+      responses:
+        '201':
+          description: Avis enregistré.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Review' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /utilisateurs/{id}/avis:
+    get:
+      operationId: listReviews
+      summary: 'Avis reçus par un membre'
+      tags: [avis]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Page d'avis.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Review' } }
+                  next_cursor: { type: string, nullable: true }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/messages:
+    get:
+      operationId: listMessages
+      summary: 'Messages de l''échange, du plus récent au plus ancien (parties et arbitre)'
+      tags: [messages]
+      security: [{ bearer: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Page de messages.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Message' } }
+                  next_cursor: { type: string, nullable: true }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: postMessage
+      summary: 'Écrire aux autres parties (l''arbitre lit seulement)'
+      tags: [messages]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [contenu]
+              properties:
+                contenu: { type: string, minLength: 1, maxLength: 5000 }
+      responses:
+        '201':
+          description: Message publié.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
 components:
   parameters:
     Id:
@@ -772,6 +874,29 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    Review:
+      type: object
+      additionalProperties: false
+      required: [id, id_echange, id_auteur, auteur, id_destinataire, note, commentaire, date]
+      properties:
+        id: { type: string, format: uuid }
+        id_echange: { type: string, format: uuid }
+        id_auteur: { type: string, format: uuid }
+        auteur: { type: string }
+        id_destinataire: { type: string, format: uuid }
+        note: { type: integer, minimum: 1, maximum: 5 }
+        commentaire: { type: string, nullable: true }
+        date: { type: string, format: date-time }
+    Message:
+      type: object
+      additionalProperties: false
+      required: [id, id_auteur, auteur, contenu, date]
+      properties:
+        id: { type: string, format: uuid }
+        id_auteur: { type: string, format: uuid }
+        auteur: { type: string }
+        contenu: { type: string }
+        date: { type: string, format: date-time }
     Dispute:
       type: object
       additionalProperties: false

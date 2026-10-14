@@ -176,7 +176,7 @@ func TestDecideDispute_Validation(t *testing.T) {
 	}
 	other := e.setRole(t, e.actor(t, e.login(t, "autre-arbitre")), RoleArbiter)
 	_, err = e.svc.DecideDispute(ctx, other, dp.ID, Decision{Kind: "LIBERER", Justification: just})
-	requireKind(t, err, KindNotFound, "", ) // seul l'arbitre affecté décide
+	requireKind(t, err, KindNotFound, "") // seul l'arbitre affecté décide
 	_, err = e.svc.GetDispute(ctx, other, uuid.New())
 	requireKind(t, err, KindNotFound, "")
 }

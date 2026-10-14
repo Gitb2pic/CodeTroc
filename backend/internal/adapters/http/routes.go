@@ -58,6 +58,12 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	m.POST("/litiges/:id/affecter", disp.assign)
 	m.POST("/litiges/:id/decision", idem, disp.decide)
 
+	soc := socialHandlers{svc: o.App}
+	m.POST("/echanges/:id/avis", soc.leaveReview)
+	pub.GET("/utilisateurs/:id/avis", soc.listReviews)
+	m.GET("/echanges/:id/messages", soc.listMessages)
+	m.POST("/echanges/:id/messages", soc.postMessage)
+
 	credits := creditHandlers{svc: o.App}
 	m.GET("/me/compte", credits.balance)
 	m.GET("/me/compte/mouvements", credits.movements)

@@ -19,4 +19,4 @@ const verifiedDeliveriesSQL = `
 	WHERE e.id_prestataire = u.id_utilisateur AND j.statut_jalon IN ('LIBERE', 'PARTAGE')`
 
 // reviewsCountSQL compte les avis reçus par u (F10).
-const reviewsCountSQL = `SELECT 0`
+const reviewsCountSQL = `SELECT count(*)::int FROM avis a WHERE a.id_destinataire = u.id_utilisateur`
