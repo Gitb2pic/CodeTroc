@@ -1,0 +1,91 @@
+# Production sur un VPS : à combiner avec compose.yaml.
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+# Prérequis : .env (DOMAIN, ACME_EMAIL, GITHUB_CLIENT_ID, GITHUB_APP_ID) et
+# ./secrets (scripts/dev-secrets.sh + secrets GitHub). Voir docs/deploiement-vps.md.
+
+services:
+  traefik:
+    # HTTPS automatique (Let's Encrypt), HTTP redirigé vers HTTPS.
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=codetroc_edge
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL:?ACME_EMAIL manquant dans .env}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+    ports: !override
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    restart: unless-stopped
+    labels:
+      # En-têtes communs : HSTS sur tout le domaine.
+      - traefik.enable=true
+      - traefik.http.middlewares.hsts.headers.stsSeconds=31536000
+      - traefik.http.middlewares.hsts.headers.stsIncludeSubdomains=true
+
+  db:
+    restart: unless-stopped
+
+  migrate:
+    environment:
+      APP_ENV: production
+
+  api:
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      PUBLIC_URL: https://${DOMAIN:?DOMAIN manquant dans .env}
+      FRONTEND_URL: https://${DOMAIN}/tableau-de-bord
+      COOKIE_SECURE: "true"
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:?GITHUB_CLIENT_ID manquant dans .env}
+      GITHUB_CLIENT_SECRET_FILE: /run/secrets/github_client_secret
+      GITHUB_APP_ID: ${GITHUB_APP_ID:?GITHUB_APP_ID manquant dans .env}
+      GITHUB_APP_PRIVATE_KEY_FILE: /run/secrets/github_app_private_key
+      GITHUB_WEBHOOK_SECRET_FILE: /run/secrets/github_webhook_secret
+      # Les variables directes de compose.yaml sont vidées : seuls les fichiers comptent.
+      GITHUB_CLIENT_SECRET: !reset null
+      GITHUB_APP_PRIVATE_KEY: !reset null
+      GITHUB_WEBHOOK_SECRET: !reset null
+    secrets: [database_url, jwt_key, vault_kek, github_client_secret, github_app_private_key, github_webhook_secret]
+    labels:
+      - traefik.http.routers.api.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)
+      - traefik.http.routers.api.entrypoints=websecure
+      - traefik.http.routers.api.tls.certresolver=le
+      - traefik.http.routers.api.middlewares=hsts@docker
+
+  worker:
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      PUBLIC_URL: https://${DOMAIN}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET_FILE: /run/secrets/github_client_secret
+      GITHUB_APP_ID: ${GITHUB_APP_ID}
+      GITHUB_APP_PRIVATE_KEY_FILE: /run/secrets/github_app_private_key
+      GITHUB_WEBHOOK_SECRET_FILE: /run/secrets/github_webhook_secret
+      GITHUB_APP_PRIVATE_KEY: !reset null
+      GITHUB_WEBHOOK_SECRET: !reset null
+    secrets: [database_url, jwt_key, vault_kek, github_client_secret, github_app_private_key, github_webhook_secret]
+
+  web:
+    restart: unless-stopped
+    labels:
+      - traefik.http.routers.web.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.web.entrypoints=websecure
+      - traefik.http.routers.web.tls.certresolver=le
+      - traefik.http.routers.web.middlewares=hsts@docker
+
+volumes:
+  letsencrypt: {}
+
+secrets:
+  github_client_secret: { file: ./secrets/github_client_secret }
+  github_app_private_key: { file: ./secrets/github_app_private_key.pem }
+  github_webhook_secret: { file: ./secrets/github_webhook_secret }
