@@ -83,7 +83,7 @@ services:
     security_opt: ["no-new-privileges:true"]
     labels:
       - traefik.enable=true
-      - traefik.http.routers.web.rule=PathPrefix(`/`)
+      - traefik.http.routers.web.rule=!PathPrefix(`/api`)
       - traefik.http.routers.web.priority=1
       - traefik.http.routers.web.entrypoints=web
       - traefik.http.services.web.loadbalancer.server.port=8080
