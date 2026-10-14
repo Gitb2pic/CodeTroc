@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/gitb2pic/codetroc/backend/internal/app"
 )
 
 // Pinger vérifie que la base répond (implémenté par *pgxpool.Pool).
@@ -27,6 +29,13 @@ type Options struct {
 	// ServeSpec expose openapi.yaml ; désactivé en production.
 	ServeSpec bool
 	Spec      []byte
+
+	// App porte les cas d'utilisation ; sans lui, seules les routes
+	// d'exploitation sont montées.
+	App          *app.Service
+	FrontendURL  string
+	CookieSecure bool
+	Webhooks     *WebhookConfig
 }
 
 const readyTimeout = 2 * time.Second
@@ -64,6 +73,9 @@ func NewRouter(o Options) (*gin.Engine, error) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 	v1.GET("/ready", ready(o.DB))
+	if o.App != nil {
+		mountRoutes(v1, o)
+	}
 	if o.ServeSpec {
 		v1.GET("/openapi.yaml", func(c *gin.Context) {
 			c.Data(http.StatusOK, "application/yaml", o.Spec)

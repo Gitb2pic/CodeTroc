@@ -12,7 +12,9 @@ umask 077
 pw=$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')
 printf '%s' "$pw" > secrets/db_password
 printf 'postgres://codetroc:%s@db:5432/codetroc?sslmode=disable' "$pw" > secrets/database_url
+head -c 48 /dev/urandom | base64 | tr -d '\n' > secrets/jwt_key
+head -c 32 /dev/urandom | base64 | tr -d '\n' > secrets/vault_kek
 # Fichiers lisibles par les utilisateurs non root des conteneurs (montage
 # direct en Compose) ; le dossier, lui, reste privé sur l'hôte.
-chmod 644 secrets/db_password secrets/database_url
+chmod 644 secrets/*
 echo "Secrets générés dans ./secrets."

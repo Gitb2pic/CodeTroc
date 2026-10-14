@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
   title: CodeTroc API
   version: 0.1.0
@@ -35,7 +35,69 @@ paths:
                 $ref: '#/components/schemas/Status'
         '503':
           $ref: '#/components/responses/Problem'
+  /auth/github/login:
+    get:
+      operationId: startGitHubLogin
+      summary: Redirige vers GitHub pour se connecter
+      tags: [auth]
+      responses:
+        '302':
+          description: Redirection vers GitHub. Pose le cookie ct_oauth_state.
+        '503':
+          $ref: '#/components/responses/Problem'
+  /auth/github/callback:
+    get:
+      operationId: completeGitHubLogin
+      summary: Retour de GitHub ; ouvre la session et redirige vers le front
+      tags: [auth]
+      parameters:
+        - { name: code, in: query, schema: { type: string } }
+        - { name: state, in: query, schema: { type: string } }
+        - { name: error, in: query, schema: { type: string } }
+      responses:
+        '302':
+          description: Redirection vers le front avec ?connexion=ok ou ?connexion=<code d'erreur>. Pose le cookie ct_refresh en cas de succès.
+  /auth/refresh:
+    post:
+      operationId: refreshSession
+      summary: Échange le cookie ct_refresh contre un jeton d'accès (rotation)
+      tags: [auth]
+      responses:
+        '200':
+          description: Nouveau jeton d'accès ; le cookie ct_refresh est remplacé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccessToken' }
+        '401':
+          $ref: '#/components/responses/Problem'
+  /auth/logout:
+    post:
+      operationId: logout
+      summary: Ferme la session (révoque la famille du jeton de rafraîchissement)
+      tags: [auth]
+      responses:
+        '204':
+          description: Session fermée.
+  /me:
+    get:
+      operationId: getMe
+      summary: Profil de l'utilisateur connecté
+      tags: [profil]
+      security: [{ bearer: [] }]
+      responses:
+        '200':
+          description: Profil.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401':
+          $ref: '#/components/responses/Problem'
 components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   responses:
     Problem:
       description: Erreur au format RFC 9457.
@@ -44,6 +106,28 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    AccessToken:
+      type: object
+      additionalProperties: false
+      required: [access_token, token_type, expires_in, user]
+      properties:
+        access_token: { type: string }
+        token_type: { type: string, enum: [Bearer] }
+        expires_in: { type: integer, description: Durée de validité en secondes. }
+        user: { $ref: '#/components/schemas/Me' }
+    Me:
+      type: object
+      additionalProperties: false
+      required: [id, pseudo, github_login, role, score_reputation, date_inscription, email, bio]
+      properties:
+        id: { type: string, format: uuid }
+        pseudo: { type: string }
+        email: { type: string, nullable: true }
+        github_login: { type: string }
+        bio: { type: string, nullable: true }
+        role: { type: string, enum: [MEMBRE, ARBITRE, ADMIN] }
+        score_reputation: { type: number }
+        date_inscription: { type: string, format: date-time }
     Status:
       type: object
       additionalProperties: false

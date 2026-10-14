@@ -44,6 +44,10 @@ func run() error {
 	}
 	defer pool.Close()
 
+	svc, err := buildService(cfg, pool, logger)
+	if err != nil {
+		return err
+	}
 	router, err := httpapi.NewRouter(httpapi.Options{
 		Logger:         logger,
 		DB:             pool,
@@ -51,6 +55,10 @@ func run() error {
 		TrustedProxies: cfg.TrustedProxies,
 		ServeSpec:      !cfg.IsProduction(),
 		Spec:           api.Spec,
+		App:            svc,
+		FrontendURL:    cfg.FrontendURL,
+		CookieSecure:   cfg.CookieSecure,
+		Webhooks:       webhookConfig(cfg),
 	})
 	if err != nil {
 		return err

@@ -181,7 +181,7 @@ func TestBodyLimit(t *testing.T) {
 func TestSpecIsHiddenInProduction(t *testing.T) {
 	w := newHarness(t, nil).do(httptest.NewRequest(http.MethodGet, "/api/v1/openapi.yaml", nil))
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "openapi: 3.1.0")
+	assert.Contains(t, w.Body.String(), "openapi: 3.0.3")
 
 	w = newHarness(t, func(o *Options) { o.ServeSpec = false }).do(httptest.NewRequest(http.MethodGet, "/api/v1/openapi.yaml", nil))
 	assert.Equal(t, http.StatusNotFound, w.Code)

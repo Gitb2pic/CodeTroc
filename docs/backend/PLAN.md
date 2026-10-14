@@ -1,6 +1,6 @@
 # CodeTroc — Plan de développement du backend
 
-> Statut : **proposition à valider** avant toute ligne de code.
+> Statut : **validé** (décisions D1 à D13 acceptées le 14 oct. 2026).
 > Ce plan remplace la stack back-end de la documentation technique (FastAPI)
 > par **Go + Gin**. Le modèle de données, les règles de gestion (RGxx) et les
 > patterns (hexagonal, Unit of Work, État, grand livre) restent ceux de la doc
@@ -34,7 +34,7 @@
 | Config | Variables d'environnement + fichiers de secrets Docker | Aucun secret dans le dépôt |
 | Logs | `log/slog` (JSON) + identifiant de requête | Bibliothèque standard, corrélation avec Traefik |
 | Métriques | Prometheus (client_golang) | Déjà prévu dans la doc technique |
-| Doc API | OpenAPI 3.1 écrit en premier (`api/openapi.yaml`) | Contrat partagé avec le front React ; client TypeScript généré |
+| Doc API | OpenAPI 3.0.3 écrit en premier (`api/openapi.yaml`) | Contrat partagé avec le front React ; client TypeScript généré |
 | Tests | `testing` + testify, **rapid** (tests de propriétés), PostgreSQL réel (service CI, `CODETROC_TEST_DATABASE_URL`), `httptest`, fuzzing natif Go | Voir section 5 |
 | Qualité / sécurité | golangci-lint (dont gosec, errcheck, staticcheck), govulncheck, gitleaks, Trivy, OWASP ZAP | Voir section 6 |
 | Exécution | Docker multi-stage (image distroless, utilisateur non root) + Docker Compose + Traefik | Conforme à la section 14 de la doc technique |
@@ -54,7 +54,7 @@ relecture des documents. Chacun a une recommandation ; ceux marqués
 
 | # | Sujet | Recommandation | Bloque |
 |---|---|---|---|
-| D1 | **Politique monétaire** (bonus ou avance) | **À trancher.** Recommandé : bonus de bienvenue de 50 cr débité du compte ÉMISSION (c'est ce que montre l'UI), solde jamais négatif, plafond de solde positif paramétrable. L'alternative du dossier projet (avance à −10 cr, aucun crédit créé) reste possible. | F2 |
+| D1 | **Politique monétaire** (bonus ou avance) | **Validé.** Bonus de bienvenue de 50 cr débité du compte ÉMISSION (c'est ce que montre l'UI), solde jamais négatif. Le plafond de solde positif est reporté : il ne doit jamais bloquer une libération. | F2 |
 | D2 | **Séquestre** | Un compte SÉQUESTRE **par échange**, et non un compte global : solde vérifiable par échange et pas de ligne unique verrouillée par toutes les transactions. | F2, F6 |
 | D3 | **Traçabilité des mouvements** | Chaque mouvement porte `id_echange` (et `id_jalon` quand il y en a un). | F2 |
 | D4 | **Idempotence** | Clés dérivées par le serveur pour les mouvements (`blocage:{echange}`, `liberation:{jalon}`…) + table `idempotency_key` limitée au couple (utilisateur, route) pour les en-têtes `Idempotency-Key`, vérifiée **après** le contrôle d'accès. | F2, F6 |
@@ -62,7 +62,7 @@ relecture des documents. Chacun a une recommandation ; ceux marqués
 | D6 | **Validité d'une preuve** | PR du dépôt de l'échange (comparé par **id** de dépôt), auteur = prestataire, créée après l'acceptation, jamais utilisée pour un autre jalon, mergée, checks du commit en succès, **au moins un check**. | F7 |
 | D7 | **Livrables non-code** | Champ `type_preuve` sur le pack : `PR_CI` ou `MANUELLE` (revue, audit). Une preuve manuelle passe par la validation du demandeur avec le même délai tacite. | F4, F7 |
 | D8 | **Abandon par le prestataire** | Échéance par jalon (issue de `delai_jours`). Après échéance + délai de grâce, le demandeur peut annuler seul : remboursement des jalons non livrés. | F8 |
-| D9 | **Arbitrage** | **À trancher.** La doc technique prévoit 1 arbitre ; l'UI montre un vote de 3 pairs à la majorité. Recommandé : 1 arbitre au MVP, jury de 3 en V2 (le modèle de données le permet). | F9 |
+| D9 | **Arbitrage** | **Validé.** 1 arbitre au MVP, jury de 3 en V2 (le modèle de données le permet). | F9 |
 | D10 | **Répartition PARTAGER** | Part du prestataire arrondie à l'inférieur, le reste au demandeur ; la somme vaut toujours le montant du jalon. | F9 |
 | D11 | **Erreurs 403 / 404** | Toujours 404 sur une ressource que l'utilisateur ne peut pas voir (anti-énumération), 403 seulement quand il la voit mais n'a pas le droit d'agir. | F0 |
 | D12 | **E-mail GitHub privé** | `email` nullable ; scope OAuth `read:user user:email` pour récupérer l'adresse vérifiée quand elle existe. | F1 |
@@ -99,6 +99,14 @@ backend/
 ├── testdata/                # charges utiles GitHub enregistrées
 └── Dockerfile
 ```
+
+Choix pragmatique (ADR-001) : le domaine reste en Go pur et testé sans base ;
+la couche application (`internal/app`) parle directement à PostgreSQL dans des
+transactions pgx, car la base n'est pas une dépendance qu'on remplacera et les
+règles de verrouillage doivent être testées sur un vrai PostgreSQL. Les
+services externes (GitHub, horloge, chiffrement) restent derrière des ports.
+Les requêtes sont écrites à la main (sqlc n'apporte pas assez pour justifier
+sa chaîne de génération à ce stade).
 
 Règles :
 - Les handlers ne contiennent aucune règle métier : ils valident l'entrée,

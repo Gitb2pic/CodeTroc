@@ -46,8 +46,16 @@ services:
     environment:
       APP_ENV: development
       DATABASE_URL_FILE: /run/secrets/database_url
+      JWT_SIGNING_KEY_FILE: /run/secrets/jwt_key
+      VAULT_KEK_FILE: /run/secrets/vault_kek
       TRUSTED_PROXIES: 172.30.0.0/24
-    secrets: [database_url]
+      PUBLIC_URL: http://localhost:8000
+      FRONTEND_URL: http://localhost:5173/
+      COOKIE_SECURE: "false"          # HTTP en local uniquement
+      # Connexion GitHub (facultative en local) : à définir dans .env
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+    secrets: [database_url, jwt_key, vault_kek]
     read_only: true
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
@@ -75,3 +83,5 @@ volumes:
 secrets:
   db_password: { file: ./secrets/db_password }
   database_url: { file: ./secrets/database_url }
+  jwt_key: { file: ./secrets/jwt_key }
+  vault_kek: { file: ./secrets/vault_kek }
