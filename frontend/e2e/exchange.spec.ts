@@ -9,7 +9,7 @@ async function shot(page: Page, name: string) {
 async function loginAs(browser: Browser, login: string): Promise<Page> {
   const page = await (await browser.newContext()).newPage();
   await page.goto('/');
-  await page.getByRole('button', { name: 'Se connecter avec GitHub' }).click();
+  await page.getByRole('button', { name: 'Se connecter avec GitHub' }).first().click();
   await page.getByRole('link', { name: `Continuer en tant que ${login}` }).click();
   await expect(page).toHaveURL(/\/tableau-de-bord/);
   await expect(page.getByRole('heading', { name: `Bonjour ${login}` })).toBeVisible();

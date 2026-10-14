@@ -157,7 +157,10 @@ export async function resetSandbox() {
 export async function bootSandbox(onStep: (step: string) => void) {
   if (typeof WebAssembly === 'undefined') throw new Error("WebAssembly n'est pas disponible dans ce navigateur.");
   onStep('Démarrage de PostgreSQL (PGlite)…');
-  const { PGlite } = await import('@electric-sql/pglite');
+  // Condition évaluée à la compilation : hors bac à sable, PGlite n'entre pas dans le build.
+  const { PGlite } = await (import.meta.env.VITE_SANDBOX === '1'
+    ? import('@electric-sql/pglite')
+    : Promise.reject(new Error('bac à sable désactivé dans ce build')));
   const fs = await fetch(new URL('pglite-fs.wasm', document.baseURI));
   if (!fs.ok) throw new Error('système de fichiers PostgreSQL introuvable');
   const fsBundle = await fs.blob();

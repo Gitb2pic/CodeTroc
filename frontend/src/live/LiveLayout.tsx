@@ -38,8 +38,7 @@ export function LiveLayout() {
     <div style={{ display: 'grid', gridTemplateColumns: '236px minmax(0,1fr)', minHeight: '100vh' }}>
       <aside style={{ position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box', borderRight: '1px solid var(--bd)', background: 'var(--s1)', display: 'flex', flexDirection: 'column', gap: 2, padding: '14px 10px' }}>
         <button onClick={() => navigate(R.dash)} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '4px 8px 14px', border: 0, background: 'none', color: 'var(--tx)', font: '600 15px var(--sans)', cursor: 'pointer' }}>
-          <Logo />
-          CodeTroc
+          <Logo wordmark size={22} />
         </button>
         <nav aria-label="Navigation principale" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {nav.map(([k, label, icon, to, count]) => {

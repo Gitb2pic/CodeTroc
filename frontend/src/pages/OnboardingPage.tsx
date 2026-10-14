@@ -21,8 +21,7 @@ export function OnboardingPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: 60, display: 'flex', alignItems: 'center', gap: 9, padding: '0 32px', borderBottom: '1px solid var(--bd)', fontWeight: 600 }}>
-        <Logo />
-        CodeTroc
+        <Logo wordmark size={22} />
         <div style={{ flex: 1 }} />
         <button onClick={() => navigate(ROUTES.landing)} style={{ border: 0, background: 'none', color: 'var(--tx3)', fontSize: 13, cursor: 'pointer' }}>
           Quitter
