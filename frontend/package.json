@@ -13,9 +13,12 @@
     "dev:api": "VITE_DATA=api vite",
     "build:api": "tsc --noEmit && VITE_DATA=api vite build",
     "api:types": "npx --yes -p openapi-typescript@7.13.0 -p typescript@5.9.3 openapi-typescript ../backend/api/openapi.yaml -o src/api/schema.ts",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "sandbox:wasm": "cd ../backend && GOOS=js GOARCH=wasm go build -trimpath -ldflags='-s -w' -o ../frontend/public-sandbox/codetroc.wasm ./cmd/sandbox && gzip -9f ../frontend/public-sandbox/codetroc.wasm && mv ../frontend/public-sandbox/codetroc.wasm.gz ../frontend/public-sandbox/codetroc.gz.wasm && cp \"$(go env GOROOT)/lib/wasm/wasm_exec.js\" ../frontend/public-sandbox/ && cp ../frontend/node_modules/@electric-sql/pglite/dist/pglite.data ../frontend/public-sandbox/pglite-fs.wasm",
+    "build:sandbox": "npm run sandbox:wasm && tsc --noEmit && VITE_DATA=api VITE_SANDBOX=1 vite build --mode sandbox --base ./ --outDir dist-sandbox"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "openapi-fetch": "^0.17.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

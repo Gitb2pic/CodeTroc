@@ -3,13 +3,14 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/url"
 	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5" // pilote pgx5://
+	pgxmigrate "github.com/golang-migrate/migrate/v4/database/pgx/v5" // pilote pgx5://
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -78,4 +79,25 @@ func redact(err error, urls ...string) error {
 		}
 	}
 	return errors.New(msg)
+}
+
+// MigrateUpDB applique les migrations sur une connexion déjà ouverte (bac à
+// sable navigateur, où la base n'est pas joignable par URL).
+func MigrateUpDB(db *sql.DB) (err error) {
+	src, err := iofs.New(migrations.FS, ".")
+	if err != nil {
+		return fmt.Errorf("migrations : %w", err)
+	}
+	drv, err := pgxmigrate.WithInstance(db, &pgxmigrate.Config{})
+	if err != nil {
+		return fmt.Errorf("migrations : %w", err)
+	}
+	m, err := migrate.NewWithInstance("iofs", src, "pgx5", drv)
+	if err != nil {
+		return fmt.Errorf("migrations : %w", err)
+	}
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return fmt.Errorf("migrations : %w", err)
+	}
+	return nil
 }

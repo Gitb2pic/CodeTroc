@@ -46,6 +46,8 @@ jobs:
         with: { go-version-file: backend/go.mod, cache-dependency-path: backend/go.sum }
       - run: go test -race -count=1 -coverprofile=coverage.out ./...
       - run: go tool cover -func=coverage.out | tail -1
+      # Bac à sable navigateur (backend compilé en WebAssembly) et serveur e2e.
+      - run: GOOS=js GOARCH=wasm go vet ./cmd/sandbox && go vet -tags e2e ./cmd/e2e
 
   security:
     runs-on: ubuntu-latest

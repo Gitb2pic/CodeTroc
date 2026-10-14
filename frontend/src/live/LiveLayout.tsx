@@ -7,6 +7,7 @@ import { Avatar, Icon, Logo } from '../components/ui';
 import { repRing } from '../domain/logic';
 import { useApp } from '../store/AppStore';
 import { initials } from './format';
+import { resetSandbox, SANDBOX } from '../sandbox/runtime';
 import { LIVE_ROUTES as R } from './routes';
 
 type NavKey = 'dash' | 'cat' | 'wallet' | 'notif' | 'disputes' | 'profile' | 'admin';
@@ -37,8 +38,7 @@ export function LiveLayout() {
     <div style={{ display: 'grid', gridTemplateColumns: '236px minmax(0,1fr)', minHeight: '100vh' }}>
       <aside style={{ position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box', borderRight: '1px solid var(--bd)', background: 'var(--s1)', display: 'flex', flexDirection: 'column', gap: 2, padding: '14px 10px' }}>
         <button onClick={() => navigate(R.dash)} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '4px 8px 14px', border: 0, background: 'none', color: 'var(--tx)', font: '600 15px var(--sans)', cursor: 'pointer' }}>
-          <Logo />
-          CodeTroc
+          <Logo wordmark size={22} />
         </button>
         <nav aria-label="Navigation principale" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {nav.map(([k, label, icon, to, count]) => {
@@ -70,6 +70,14 @@ export function LiveLayout() {
         </div>
       </aside>
       <main style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {SANDBOX && (
+          <div role="note" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '8px 28px', borderBottom: '1px dashed var(--bd2)', font: '12.5px var(--mono)', color: 'var(--tx2)' }}>
+            <Icon name="play" size={13} />
+            <span style={{ flex: 1, minWidth: 0 }}>Bac à sable · backend Go et PostgreSQL dans ton navigateur · tu joues <strong style={{ color: 'var(--tx)' }}>{user.pseudo}</strong></span>
+            <button className="btn btn-secondary" onClick={() => logout().then(() => navigate(R.landing))} style={{ height: 26, padding: '0 10px', fontSize: 12 }}>Changer de persona</button>
+            <button className="btn btn-secondary" onClick={() => void resetSandbox()} style={{ height: 26, padding: '0 10px', fontSize: 12 }}>Réinitialiser</button>
+          </div>
+        )}
         <div style={{ position: 'sticky', top: 0, zIndex: 5, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, padding: '0 28px', borderBottom: '1px solid var(--bd)', background: 'color-mix(in oklab,var(--bg) 85%,transparent)', backdropFilter: 'blur(12px)' }}>
           <button onClick={() => navigate(R.wallet)} aria-label={b ? `Solde : ${b.disponible} crédits disponibles, ${b.sequestre_sortant + b.sequestre_entrant} en séquestre` : 'Solde'}
             style={{ display: 'flex', alignItems: 'center', gap: 10, height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s1)', color: 'var(--tx)', cursor: 'pointer', font: '500 12.5px var(--mono)' }}>

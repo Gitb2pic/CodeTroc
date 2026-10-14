@@ -15,24 +15,7 @@ export function Icon({ name, size, spin, style }: { name: string; size?: number;
   );
 }
 
-export function Logo() {
-  return (
-    <span
-      style={{
-        width: 24,
-        height: 24,
-        borderRadius: 6,
-        background: 'var(--ac)',
-        color: 'var(--on-ac)',
-        display: 'grid',
-        placeItems: 'center',
-        font: '700 11px/1 var(--mono)',
-      }}
-    >
-      ct
-    </span>
-  );
-}
+export { Logo } from './Brand';
 
 /** Initiales dans un rond ; `ring` dessine l'anneau de réputation. */
 export function Avatar({ ini, size = 28, ring, fontSize, border }: { ini: string; size?: number; ring?: string; fontSize?: number; border?: string }) {

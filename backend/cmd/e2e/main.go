@@ -12,8 +12,6 @@ package main
 import (
 	"context"
 	"crypto/rand"
-	"fmt"
-	"hash/fnv"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -29,6 +27,7 @@ import (
 	"github.com/gitb2pic/codetroc/backend/internal/adapters/postgres"
 	"github.com/gitb2pic/codetroc/backend/internal/adapters/vault"
 	"github.com/gitb2pic/codetroc/backend/internal/app"
+	"github.com/gitb2pic/codetroc/backend/internal/devfake"
 	"github.com/gitb2pic/codetroc/backend/internal/platform/token"
 )
 
@@ -38,40 +37,6 @@ const frontCSP = "default-src 'self'; script-src 'self'; style-src 'self' https:
 
 // Membres proposés par la fausse page d'autorisation GitHub.
 var members = []string{"sami", "lea", "arbitre", "admin"}
-
-// Le faux GitHub attribue les PR à « lea », la prestataire du scénario.
-const prAuthor = "lea"
-
-func githubID(login string) int64 {
-	h := fnv.New32a()
-	_, _ = h.Write([]byte(login))
-	return 100_000 + int64(h.Sum32()%1_000_000)
-}
-
-type fakeOAuth struct{}
-
-func (fakeOAuth) AuthorizeURL(state string) string { return "/fake-github/authorize?state=" + state }
-
-func (fakeOAuth) Exchange(_ context.Context, code string) (app.GitHubIdentity, error) {
-	return app.GitHubIdentity{ID: githubID(code), Login: code, CreatedAt: time.Now().AddDate(-3, 0, 0)}, nil
-}
-
-type fakeGitHub struct{}
-
-func repoID(owner, name string) int64 { return githubID("repo:" + owner + "/" + name) }
-
-func (fakeGitHub) Repository(_ context.Context, owner, name string) (app.Repository, error) {
-	return app.Repository{ID: repoID(owner, name), FullName: owner + "/" + name}, nil
-}
-
-func (fakeGitHub) PullRequest(_ context.Context, owner, name string, n int) (app.PullRequest, error) {
-	return app.PullRequest{ID: repoID(owner, name)*1000 + int64(n), Number: n, BaseRepoID: repoID(owner, name), AuthorID: githubID(prAuthor),
-		CreatedAt: time.Now(), Merged: true, HeadSHA: fmt.Sprintf("e2e%04d", n), MergeSHA: fmt.Sprintf("m2e%04d", n)}, nil
-}
-
-func (fakeGitHub) CheckRuns(context.Context, string, string, string) ([]app.CheckRun, error) {
-	return []app.CheckRun{{Name: "lint", Status: "completed", Conclusion: "success"}, {Name: "test", Status: "completed", Conclusion: "success"}}, nil
-}
 
 var authorize = template.Must(template.New("a").Parse(`<!doctype html><meta charset="utf-8"><title>Faux GitHub</title>
 <h1>Faux GitHub (e2e)</h1>{{range .Members}}<p><a href="/api/v1/auth/github/callback?state={{$.State}}&code={{.}}">Continuer en tant que {{.}}</a></p>{{end}}`))
@@ -113,7 +78,7 @@ func run() error {
 		return err
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
-	svc := app.New(app.Deps{DB: pool, Tokens: tokens, OAuth: fakeOAuth{}, GitHub: fakeGitHub{}, Vault: sealer, Settings: app.DefaultSettings()})
+	svc := app.New(app.Deps{DB: pool, Tokens: tokens, OAuth: devfake.OAuth{AuthorizePath: "/fake-github/authorize"}, GitHub: devfake.GitHub{DB: pool}, Vault: sealer, Settings: app.DefaultSettings()})
 	router, err := httpapi.NewRouter(httpapi.Options{
 		Logger: logger, DB: pool, MaxBodyBytes: 1 << 20, ServeSpec: true, Spec: api.Spec, App: svc,
 		FrontendURL: "/tableau-de-bord", CookieSecure: false,
