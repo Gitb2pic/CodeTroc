@@ -28,7 +28,8 @@ function RequireSession() {
     }
   }, [showToast]);
   if (status === 'loading') return <div aria-busy="true" style={{ minHeight: '100vh' }} />;
-  if (status === 'anonymous') return <Navigate to={R.landing} replace />;
+  // La requête (?connexion=<code>) suit : l'écran de connexion affiche la cause de l'échec.
+  if (status === 'anonymous') return <Navigate to={{ pathname: R.landing, search: window.location.search }} replace />;
   return <Outlet />;
 }
 

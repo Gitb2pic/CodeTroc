@@ -18,6 +18,9 @@ const OUTCOMES: Record<string, string> = {
   'compte-github-trop-recent': 'Ton compte GitHub est trop récent pour rejoindre CodeTroc.',
   'compte-suspendu': 'Ce compte est suspendu.',
   'etat-oauth-invalide': 'La connexion a expiré, recommence.',
+  'github-refuse': "GitHub a refusé la connexion (configuration de l'OAuth App côté serveur).",
+  'github-non-configure': "La connexion GitHub n'est pas configurée sur ce serveur.",
+  'erreur-interne': 'Erreur du serveur pendant la connexion, réessaie plus tard.',
 };
 
 /** Message à afficher après le retour de GitHub (?connexion=…), puis nettoyage de l'URL. */
