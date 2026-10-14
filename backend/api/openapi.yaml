@@ -6,6 +6,10 @@ info:
     API de CodeTroc : échange de compétences entre développeurs contre des
     crédits, libérés sur preuve GitHub. Toutes les erreurs suivent la
     RFC 9457 (application/problem+json).
+
+    Limitation de débit : /auth/* par adresse IP, l'API entière par adresse IP,
+    les écritures par membre. Au-delà : 429 /problems/trop-de-requetes avec
+    l'en-tête Retry-After (secondes).
 servers:
   - url: /api/v1
 paths:
@@ -41,6 +45,7 @@ paths:
       summary: 'Redirige vers GitHub pour se connecter'
       tags: [auth]
       responses:
+        '429': { $ref: '#/components/responses/Problem' }
         '302':
           description: Redirection vers GitHub. Pose le cookie ct_oauth_state.
         '503':
@@ -55,6 +60,7 @@ paths:
         - { name: state, in: query, schema: { type: string } }
         - { name: error, in: query, schema: { type: string } }
       responses:
+        '429': { $ref: '#/components/responses/Problem' }
         '302':
           description: Redirection vers le front avec ?connexion=ok ou ?connexion=<code d'erreur>. Pose le cookie ct_refresh en cas de succès.
   /auth/refresh:
@@ -63,6 +69,7 @@ paths:
       summary: 'Échange le cookie ct_refresh contre un jeton d''accès (rotation)'
       tags: [auth]
       responses:
+        '429': { $ref: '#/components/responses/Problem' }
         '200':
           description: Nouveau jeton d'accès ; le cookie ct_refresh est remplacé.
           content:
@@ -76,6 +83,7 @@ paths:
       summary: 'Ferme la session (révoque la famille du jeton de rafraîchissement)'
       tags: [auth]
       responses:
+        '429': { $ref: '#/components/responses/Problem' }
         '204':
           description: Session fermée.
   /me:

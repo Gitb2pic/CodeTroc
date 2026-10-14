@@ -18,6 +18,16 @@ import (
 
 const witness = "temoin-du-coffre-a-ne-jamais-journaliser"
 
+// withTestVault branche un coffre réel avec une clé aléatoire.
+func withTestVault(t *testing.T) func(*app.Deps, *Options) {
+	kek := make([]byte, 32)
+	_, err := rand.Read(kek)
+	require.NoError(t, err)
+	v, err := vault.New(map[int][]byte{1: kek}, 1)
+	require.NoError(t, err)
+	return func(d *app.Deps, _ *Options) { d.Vault = v }
+}
+
 func TestVaultAPI(t *testing.T) {
 	var logs bytes.Buffer
 	kek := make([]byte, 32)

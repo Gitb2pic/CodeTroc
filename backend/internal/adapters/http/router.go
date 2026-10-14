@@ -36,6 +36,12 @@ type Options struct {
 	FrontendURL  string
 	CookieSecure bool
 	Webhooks     *WebhookConfig
+	// HSTS ajoute Strict-Transport-Security (production, servie en HTTPS).
+	HSTS bool
+	// RateLimits : nil = DefaultRateLimits().
+	RateLimits *RateLimits
+
+	authLimiter, writeLimiter *limiter
 }
 
 const readyTimeout = 2 * time.Second
@@ -62,9 +68,22 @@ func NewRouter(o Options) (*gin.Engine, error) {
 		requestIDMiddleware(),
 		accessLog(o.Logger),
 		recovery(o.Logger),
-		securityHeaders(),
+		securityHeaders(o.HSTS),
 		bodyLimit(o.MaxBodyBytes),
 	)
+	limits := DefaultRateLimits()
+	if o.RateLimits != nil {
+		limits = *o.RateLimits
+	}
+	// Par adresse IP (derrière les proxys de confiance), sauf les webhooks GitHub, authentifiés par signature.
+	r.Use(rateLimit(newLimiter(limits.IP, time.Now), func(c *gin.Context) string {
+		if c.Request.URL.Path == "/api/v1/webhooks/github" {
+			return ""
+		}
+		return c.ClientIP()
+	}))
+	o.writeLimiter = newLimiter(limits.Write, time.Now)
+	o.authLimiter = newLimiter(limits.Auth, time.Now)
 	r.NoRoute(func(c *gin.Context) { WriteProblem(c, ErrNotFound) })
 	r.NoMethod(func(c *gin.Context) { WriteProblem(c, ErrMethodNotAllowed) })
 

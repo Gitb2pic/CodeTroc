@@ -1204,6 +1204,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            429: components["responses"]["Problem"];
             503: components["responses"]["Problem"];
         };
     };
@@ -1227,6 +1228,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            429: components["responses"]["Problem"];
         };
     };
     refreshSession: {
@@ -1248,6 +1250,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
         };
     };
     logout: {
@@ -1266,6 +1269,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            429: components["responses"]["Problem"];
         };
     };
     getMe: {

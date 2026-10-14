@@ -60,6 +60,7 @@ func run() error {
 		FrontendURL:    cfg.FrontendURL,
 		CookieSecure:   cfg.CookieSecure,
 		Webhooks:       webhookConfig(cfg),
+		HSTS:           cfg.IsProduction(),
 	})
 	if err != nil {
 		return err

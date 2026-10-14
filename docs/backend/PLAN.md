@@ -202,7 +202,8 @@ comptes GitHub de test.
 
 1. **Pentest de fin de feature critique** (après F2, F6, F7, F8, F12) :
    1 à 2 h ciblées sur la surface ajoutée, avec la checklist ci-dessous.
-2. **Pentest de release MVP** : une passe complète guidée par
+2. **Pentest de release MVP** (passe automatisée faite le 14 oct. 2026 :
+   [rapport](../securite/pentest-release.md) ; passe outillée sur staging à faire) : une passe complète guidée par
    OWASP API Security Top 10 (2023) et ASVS niveau 2 (chapitres
    authentification, sessions, contrôle d'accès, validation, cryptographie,
    logique métier).

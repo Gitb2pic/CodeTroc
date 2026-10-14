@@ -1,6 +1,10 @@
 package httpapi
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 // WebhookConfig configure la réception des webhooks GitHub (F7).
 type WebhookConfig struct {
@@ -11,12 +15,19 @@ type WebhookConfig struct {
 // ce qui donne une vue d'ensemble de la surface exposée.
 func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	auth := authHandlers{svc: o.App, frontendURL: o.FrontendURL, secure: o.CookieSecure}
-	v1.GET("/auth/github/login", auth.login)
-	v1.GET("/auth/github/callback", auth.callback)
-	v1.POST("/auth/refresh", auth.refresh)
-	v1.POST("/auth/logout", auth.logout)
+	a := v1.Group("/auth", rateLimit(o.authLimiter, func(c *gin.Context) string { return c.ClientIP() }))
+	a.GET("/github/login", auth.login)
+	a.GET("/github/callback", auth.callback)
+	a.POST("/refresh", auth.refresh)
+	a.POST("/logout", auth.logout)
 
-	m := v1.Group("", requireAuth(o.App))
+	// Écritures limitées par membre (après authentification).
+	m := v1.Group("", requireAuth(o.App), rateLimit(o.writeLimiter, func(c *gin.Context) string {
+		if c.Request.Method == http.MethodGet {
+			return ""
+		}
+		return actor(c).ID.String()
+	}))
 	m.GET("/me", auth.me)
 	m.DELETE("/me", auth.deleteMe)
 

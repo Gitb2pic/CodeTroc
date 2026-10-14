@@ -91,9 +91,12 @@ func recovery(logger *slog.Logger) gin.HandlerFunc {
 }
 
 // securityHeaders pose les en-têtes adaptés à une API JSON.
-func securityHeaders() gin.HandlerFunc {
+func securityHeaders(hsts bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		h := c.Writer.Header()
+		if hsts {
+			h.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("Referrer-Policy", "no-referrer")
