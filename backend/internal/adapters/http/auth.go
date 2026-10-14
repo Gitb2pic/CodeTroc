@@ -154,6 +154,27 @@ func requireAuth(svc *app.Service) gin.HandlerFunc {
 	}
 }
 
+// optionalAuth reconnaît un jeton s'il est présent ; un jeton invalide reste une erreur 401.
+func optionalAuth(svc *app.Service) gin.HandlerFunc {
+	required := requireAuth(svc)
+	return func(c *gin.Context) {
+		if c.GetHeader("Authorization") == "" {
+			c.Next()
+			return
+		}
+		required(c)
+	}
+}
+
+// optionalActor renvoie l'acteur s'il est authentifié, nil sinon.
+func optionalActor(c *gin.Context) *app.Actor {
+	if a, ok := c.Get(actorKey); ok {
+		act := a.(app.Actor)
+		return &act
+	}
+	return nil
+}
+
 func actor(c *gin.Context) app.Actor {
 	a, _ := c.Get(actorKey)
 	return a.(app.Actor)

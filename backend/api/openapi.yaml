@@ -92,6 +92,244 @@ paths:
               schema: { $ref: '#/components/schemas/Me' }
         '401':
           $ref: '#/components/responses/Problem'
+    patch:
+      operationId: updateMe
+      summary: Modifier son pseudo ou sa bio (bio vide = effacée)
+      tags: [profil]
+      security: [{ bearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                pseudo: { type: string }
+                bio: { type: string }
+      responses:
+        '200':
+          description: Profil modifié.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /me/competences:
+    put:
+      operationId: setMySkills
+      summary: Remplacer ses compétences déclarées
+      tags: [profil]
+      security: [{ bearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [competences]
+              properties:
+                competences:
+                  type: array
+                  maxItems: 30
+                  items:
+                    type: object
+                    additionalProperties: false
+                    required: [id_competence, niveau]
+                    properties:
+                      id_competence: { type: string, format: uuid }
+                      niveau: { $ref: '#/components/schemas/Level' }
+      responses:
+        '200':
+          description: Compétences enregistrées.
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/UserSkill' } }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /competences:
+    get:
+      operationId: listSkills
+      summary: Référentiel des compétences
+      tags: [profil]
+      responses:
+        '401': { $ref: '#/components/responses/Problem' }
+        '200':
+          description: Compétences.
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Skill' } }
+  /utilisateurs/{id}:
+    get:
+      operationId: getPublicProfile
+      summary: Profil public d'un membre (sans e-mail)
+      tags: [profil]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '401': { $ref: '#/components/responses/Problem' }
+        '200':
+          description: Profil public.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicProfile' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /packs:
+    get:
+      operationId: listPacks
+      summary: Catalogue des packs actifs
+      tags: [catalogue]
+      parameters:
+        - { name: competence, in: query, schema: { type: string, format: uuid } }
+        - { name: q, in: query, schema: { type: string } }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '401': { $ref: '#/components/responses/Problem' }
+        '200':
+          description: Page de packs.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Pack' } }
+                  next_cursor: { type: string, nullable: true }
+        '400': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createPack
+      summary: Créer un pack (administrateur)
+      tags: [catalogue]
+      security: [{ bearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PackInput' }
+      responses:
+        '201':
+          description: Pack créé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pack' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /packs/{id}:
+    get:
+      operationId: getPack
+      summary: Détail d'un pack
+      tags: [catalogue]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '401': { $ref: '#/components/responses/Problem' }
+        '200':
+          description: Pack.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pack' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updatePack
+      summary: Modifier un pack (administrateur)
+      tags: [catalogue]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PackPatch' }
+      responses:
+        '200':
+          description: Pack modifié.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pack' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /offres:
+    get:
+      operationId: listOffers
+      summary: Offres publiées (écran Catalogue)
+      tags: [catalogue]
+      parameters:
+        - { name: pack, in: query, schema: { type: string, format: uuid } }
+        - { name: prestataire, in: query, schema: { type: string, format: uuid } }
+        - { name: competence, in: query, description: 'Libellé exact, ex. Docker', schema: { type: string } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: prix_max, in: query, schema: { type: integer } }
+        - { name: delai_max, in: query, schema: { type: integer } }
+        - { name: reputation_min, in: query, schema: { type: number } }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '401': { $ref: '#/components/responses/Problem' }
+        '200':
+          description: Page d'offres.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Offer' } }
+                  next_cursor: { type: string, nullable: true }
+        '400': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createOffer
+      summary: Publier une offre sur un pack
+      tags: [catalogue]
+      security: [{ bearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OfferInput' }
+      responses:
+        '201':
+          description: Offre publiée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Offer' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /offres/{id}:
+    get:
+      operationId: getOffer
+      summary: Détail d'une offre
+      tags: [catalogue]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '401': { $ref: '#/components/responses/Problem' }
+        '200':
+          description: Offre.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Offer' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /offres/{id}/retirer:
+    post:
+      operationId: withdrawOffer
+      summary: Retirer son offre
+      tags: [catalogue]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '204': { description: Offre retirée. }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /me/compte:
     get:
       operationId: getMyAccount
@@ -133,6 +371,11 @@ paths:
           $ref: '#/components/responses/Problem'
 components:
   parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
     Limit:
       name: limit
       in: query
@@ -155,6 +398,143 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    Level:
+      type: string
+      enum: [DEBUTANT, INTERMEDIAIRE, CONFIRME, EXPERT]
+    Skill:
+      type: object
+      additionalProperties: false
+      required: [id, libelle, categorie]
+      properties:
+        id: { type: string, format: uuid }
+        libelle: { type: string }
+        categorie: { type: string }
+    UserSkill:
+      type: object
+      additionalProperties: false
+      required: [id, libelle, niveau]
+      properties:
+        id: { type: string, format: uuid }
+        libelle: { type: string }
+        niveau: { $ref: '#/components/schemas/Level' }
+    PublicProfile:
+      type: object
+      additionalProperties: false
+      required: [id, pseudo, github_login, bio, score_reputation, date_inscription, competences, livraisons_verifiees, avis_recus]
+      properties:
+        id: { type: string, format: uuid }
+        pseudo: { type: string }
+        github_login: { type: string }
+        bio: { type: string, nullable: true }
+        score_reputation: { type: number }
+        date_inscription: { type: string, format: date-time }
+        competences: { type: array, items: { $ref: '#/components/schemas/UserSkill' } }
+        livraisons_verifiees: { type: integer }
+        avis_recus: { type: integer }
+    Criterion:
+      type: object
+      additionalProperties: false
+      required: [texte, verification]
+      properties:
+        texte: { type: string }
+        verification: { type: string, enum: [CI, SCAN, REVUE] }
+    Milestone:
+      type: object
+      additionalProperties: false
+      required: [titre, montant]
+      properties:
+        titre: { type: string, maxLength: 120 }
+        montant: { type: integer, minimum: 1 }
+    ProofType:
+      type: string
+      enum: [PR_CI, MANUELLE]
+      description: 'PR_CI : PR mergée et CI au vert. MANUELLE : validation par le demandeur.'
+    Pack:
+      type: object
+      additionalProperties: false
+      required: [id, titre, description, livrable, type_preuve, criteres, prix_min, prix_max, actif, competences, date_creation]
+      properties:
+        id: { type: string, format: uuid }
+        titre: { type: string }
+        description: { type: string }
+        livrable: { type: string }
+        type_preuve: { $ref: '#/components/schemas/ProofType' }
+        criteres: { type: array, items: { $ref: '#/components/schemas/Criterion' } }
+        prix_min: { type: integer }
+        prix_max: { type: integer }
+        actif: { type: boolean }
+        competences: { type: array, items: { $ref: '#/components/schemas/Skill' } }
+        date_creation: { type: string, format: date-time }
+    PackInput:
+      type: object
+      additionalProperties: false
+      required: [titre, description, livrable, type_preuve, criteres, prix_min, prix_max, competences]
+      properties:
+        titre: { type: string }
+        description: { type: string }
+        livrable: { type: string }
+        type_preuve: { $ref: '#/components/schemas/ProofType' }
+        criteres: { type: array, items: { $ref: '#/components/schemas/Criterion' } }
+        prix_min: { type: integer }
+        prix_max: { type: integer }
+        competences: { type: array, items: { type: string, format: uuid } }
+    PackPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        titre: { type: string }
+        description: { type: string }
+        livrable: { type: string }
+        type_preuve: { $ref: '#/components/schemas/ProofType' }
+        criteres: { type: array, items: { $ref: '#/components/schemas/Criterion' } }
+        prix_min: { type: integer }
+        prix_max: { type: integer }
+        competences: { type: array, items: { type: string, format: uuid } }
+        actif: { type: boolean }
+    Offer:
+      type: object
+      additionalProperties: false
+      required: [id, titre, description, prix_credits, delai_jours, jalons, statut, date_publication, pack, prestataire]
+      properties:
+        id: { type: string, format: uuid }
+        titre: { type: string }
+        description: { type: string }
+        prix_credits: { type: integer }
+        delai_jours: { type: integer }
+        jalons: { type: array, items: { $ref: '#/components/schemas/Milestone' } }
+        statut: { type: string, enum: [PUBLIEE, RETIREE] }
+        date_publication: { type: string, format: date-time }
+        pack:
+          type: object
+          additionalProperties: false
+          required: [id, titre, type_preuve, competences]
+          properties:
+            id: { type: string, format: uuid }
+            titre: { type: string }
+            type_preuve: { $ref: '#/components/schemas/ProofType' }
+            competences: { type: array, items: { type: string } }
+        prestataire: { $ref: '#/components/schemas/MemberSummary' }
+    MemberSummary:
+      type: object
+      additionalProperties: false
+      required: [id, pseudo, github_login, score_reputation, livraisons_verifiees]
+      properties:
+        id: { type: string, format: uuid }
+        pseudo: { type: string }
+        github_login: { type: string }
+        score_reputation: { type: number }
+        livraisons_verifiees: { type: integer }
+    OfferInput:
+      type: object
+      additionalProperties: false
+      required: [id_pack, titre, prix_credits, delai_jours, jalons]
+      properties:
+        id_pack: { type: string, format: uuid }
+        titre: { type: string }
+        description: { type: string }
+        prix_credits: { type: integer }
+        delai_jours: { type: integer }
+        jalons: { type: array, items: { $ref: '#/components/schemas/Milestone' } }
     Balance:
       type: object
       additionalProperties: false

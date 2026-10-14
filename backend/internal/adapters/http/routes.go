@@ -19,6 +19,22 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	m := v1.Group("", requireAuth(o.App))
 	m.GET("/me", auth.me)
 
+	cat := catalogHandlers{svc: o.App}
+	m.PATCH("/me", cat.updateMe)
+	m.PUT("/me/competences", cat.setSkills)
+	m.POST("/packs", cat.createPack)
+	m.PATCH("/packs/:id", cat.updatePack)
+	m.POST("/offres", cat.createOffer)
+	m.POST("/offres/:id/retirer", cat.withdrawOffer)
+
+	pub := v1.Group("", optionalAuth(o.App))
+	pub.GET("/competences", cat.skills)
+	pub.GET("/utilisateurs/:id", cat.publicProfile)
+	pub.GET("/packs", cat.listPacks)
+	pub.GET("/packs/:id", cat.getPack)
+	pub.GET("/offres", cat.listOffers)
+	pub.GET("/offres/:id", cat.getOffer)
+
 	credits := creditHandlers{svc: o.App}
 	m.GET("/me/compte", credits.balance)
 	m.GET("/me/compte/mouvements", credits.movements)
