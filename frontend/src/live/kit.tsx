@@ -1,4 +1,4 @@
-import { cloneElement, useId, useState, type ReactElement, type ReactNode } from 'react';
+import { cloneElement, Component, useId, useState, type ReactElement, type ReactNode } from 'react';
 import { ApiError } from '../api/client';
 import type { Resource } from '../api/useResource';
 import { ErrorBanner, Skeleton } from '../components/ui';
@@ -26,6 +26,30 @@ export function Loaded<T>({ r, children, what }: { r: Resource<T>; children: (da
     );
   }
   return <>{children(r.data)}</>;
+}
+
+/**
+ * Isole une page : une erreur de rendu affiche un message au lieu de démonter
+ * toute l'application (écran vide). Remise à zéro par `key` à chaque navigation.
+ */
+export class PageBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  componentDidCatch(error: Error) {
+    console.error('Erreur de rendu de la page', error);
+  }
+  render() {
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    return (
+      <ErrorBanner onRetry={() => this.setState({ error: null })}>
+        <strong style={{ fontWeight: 600 }}>Cette page n'a pas pu s'afficher.</strong>{' '}
+        <span className="muted">{error.message}</span>
+      </ErrorBanner>
+    );
+  }
 }
 
 /**

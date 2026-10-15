@@ -39,6 +39,7 @@ export function CatalogPage() {
         <SegButtons options={[[0, 'Tout prix'], [60, '≤ 60 cr'], [120, '≤ 120 cr']]} value={maxPrice} onChange={setMaxPrice} />
         <SegButtons options={[[0, 'Tout délai'], [3, '≤ 3 j'], [7, '≤ 7 j']]} value={maxDays} onChange={setMaxDays} />
       </div>
+      <div data-testid="catalogue-resultats" aria-busy={offers.loading} style={{ opacity: offers.loading && offers.data ? 0.5 : 1, transition: 'opacity .15s', pointerEvents: offers.loading ? 'none' : undefined }}>
       <Loaded r={offers} what="Le catalogue">
         {(page) =>
           page.items.length === 0 ? (
@@ -57,6 +58,7 @@ export function CatalogPage() {
           )
         }
       </Loaded>
+      </div>
     </div>
   );
 }

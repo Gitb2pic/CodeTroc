@@ -26,7 +26,7 @@ export function PackCard({ pack, onOpen, as = 'button' }: { pack: Pack; onOpen?:
           {as === 'button' && (
             <span className="mono faint" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11.5 }}>
               <Icon name="shield-check" size={12} style={{ color: 'var(--ok)' }} />
-              {pack.deliv} livraisons vérifiées
+              {plural(pack.deliv, 'livraison vérifiée', 'livraisons vérifiées')}
             </span>
           )}
         </span>

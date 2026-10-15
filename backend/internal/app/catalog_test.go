@@ -225,6 +225,25 @@ func TestOffers_CreateValidateList(t *testing.T) {
 	assert.Len(t, list.Items, 1)
 }
 
+func TestOffers_SearchMatchesSkills(t *testing.T) {
+	e := newEnv(t)
+	ctx := context.Background()
+	lea := e.actor(t, e.login(t, "lea"))
+	o, err := e.svc.CreateOffer(ctx, lea, offerInput(t, e))
+	require.NoError(t, err)
+	require.NotContains(t, strings.ToLower(o.Title+" "+o.Pack.Title), "docker", "le test doit chercher hors du titre")
+
+	for _, q := range []string{"docker", "DOCKER", "github act"} {
+		list, err := e.svc.ListOffers(ctx, OfferFilter{Q: q}, 20, "")
+		require.NoError(t, err)
+		require.Len(t, list.Items, 1, "q=%s", q)
+		assert.Equal(t, o.ID, list.Items[0].ID)
+	}
+	list, err := e.svc.ListOffers(ctx, OfferFilter{Q: "terraform"}, 20, "")
+	require.NoError(t, err)
+	assert.Empty(t, list.Items)
+}
+
 func TestOffers_Withdraw(t *testing.T) {
 	e := newEnv(t)
 	ctx := context.Background()

@@ -385,7 +385,9 @@ func (s *Service) ListOffers(ctx context.Context, f OfferFilter, limit int, afte
 		  AND ($2::uuid IS NULL OR o.id_prestataire = $2)
 		  AND ($3 = '' OR EXISTS (SELECT 1 FROM requerir r JOIN competence c USING (id_competence)
 		                          WHERE r.id_pack = p.id_pack AND c.libelle_competence = $3))
-		  AND ($4 = '' OR position(lower($4) IN lower(o.titre_offre || ' ' || p.titre_pack || ' ' || u.pseudo)) > 0)
+		  AND ($4 = '' OR position(lower($4) IN lower(o.titre_offre || ' ' || p.titre_pack || ' ' || u.pseudo)) > 0
+		       OR EXISTS (SELECT 1 FROM requerir r JOIN competence c USING (id_competence)
+		                  WHERE r.id_pack = p.id_pack AND position(lower($4) IN lower(c.libelle_competence)) > 0))
 		  AND ($5 = 0 OR o.prix_credits <= $5)
 		  AND ($6 = 0 OR o.delai_jours <= $6)
 		  AND u.score_reputation >= $7
