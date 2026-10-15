@@ -423,3 +423,56 @@ select {
 .app-root section[id] {
   scroll-margin-top: 76px;
 }
+
+/* Application connectée : menu latéral repliable (bouton hamburger de la barre du haut). */
+.live-shell {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  min-height: 100vh;
+  transition: grid-template-columns 0.2s ease;
+}
+.live-shell[data-nav='ferme'] {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+.live-side {
+  position: sticky;
+  top: 0;
+  width: 236px;
+  overflow: hidden;
+  transition: transform 0.2s ease, visibility 0s;
+}
+.live-shell[data-nav='ferme'] .live-side {
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform 0.2s ease, visibility 0s 0.2s;
+}
+.live-backdrop {
+  display: none;
+}
+/* Petit écran : le menu passe par-dessus la page, avec un voile qui le referme au clic. */
+@media (max-width: 900px) {
+  .live-shell,
+  .live-shell[data-nav='ferme'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .live-side {
+    position: fixed;
+    left: 0;
+    z-index: 40;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  }
+  .live-shell[data-nav='ouvert'] .live-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    background: rgba(0, 0, 0, 0.45);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-shell,
+  .live-side,
+  .live-shell[data-nav='ferme'] .live-side {
+    transition: none;
+  }
+}

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { api, call } from '../api/client';
 import { useSession } from '../api/session';
@@ -11,6 +11,31 @@ import { PageBoundary } from './kit';
 import { resetSandbox, SANDBOX } from '../sandbox/runtime';
 import { LIVE_ROUTES as R } from './routes';
 
+const NAV_KEY = 'codetroc.menu';
+const narrow = () => window.matchMedia?.('(max-width: 900px)').matches ?? false;
+
+/** Menu latéral ouvert ou rentré ; mémorisé sur grand écran, fermé par défaut sur petit écran. */
+function useNavOpen() {
+  const [open, setOpen] = useState(() => {
+    if (narrow()) return false;
+    try {
+      return localStorage.getItem(NAV_KEY) !== 'ferme';
+    } catch {
+      return true;
+    }
+  });
+  const set = (v: boolean) => {
+    setOpen(v);
+    if (narrow()) return;
+    try {
+      localStorage.setItem(NAV_KEY, v ? 'ouvert' : 'ferme');
+    } catch {
+      /* stockage indisponible : le choix vaut pour la session */
+    }
+  };
+  return [open, set] as const;
+}
+
 type NavKey = 'dash' | 'cat' | 'wallet' | 'notif' | 'disputes' | 'profile' | 'admin';
 
 export function LiveLayout() {
@@ -18,6 +43,7 @@ export function LiveLayout() {
   const navigate = useNavigate();
   const { user, logout } = useSession();
   const { toggleTheme, theme } = useApp();
+  const [navOpen, setNavOpen] = useNavOpen();
   const balance = useResource(() => call(() => api.GET('/me/compte')), [pathname]);
   const unread = useResource(() => call(() => api.GET('/notifications/compteur')), [pathname]);
 
@@ -25,7 +51,17 @@ export function LiveLayout() {
   // que React prendrait pour une fonction de nettoyage (écran noir au changement de route).
   useEffect(() => {
     window.scrollTo({ top: 0 });
+    // Petit écran : le menu passe par-dessus la page, on le referme après chaque navigation.
+    if (narrow()) setNavOpen(false);
   }, [pathname]);
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && narrow()) setNavOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [navOpen]);
   if (!user) return null;
 
   const nav: [NavKey, string, string, string, number?][] = [
@@ -40,8 +76,9 @@ export function LiveLayout() {
   const b = balance.data;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '236px minmax(0,1fr)', minHeight: '100vh' }}>
-      <aside style={{ position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box', borderRight: '1px solid var(--bd)', background: 'var(--s1)', display: 'flex', flexDirection: 'column', gap: 2, padding: '14px 10px' }}>
+    <div className="live-shell" data-nav={navOpen ? 'ouvert' : 'ferme'}>
+      <div className="live-backdrop" onClick={() => setNavOpen(false)} aria-hidden="true" />
+      <aside id="menu-principal" className="live-side" inert={!navOpen} style={{ height: '100vh', boxSizing: 'border-box', borderRight: '1px solid var(--bd)', background: 'var(--s1)', display: 'flex', flexDirection: 'column', gap: 2, padding: '14px 10px' }}>
         <button onClick={() => navigate(R.dash)} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '4px 8px 14px', border: 0, background: 'none', color: 'var(--tx)', font: '600 15px var(--sans)', cursor: 'pointer' }}>
           <Logo wordmark size={22} />
         </button>
@@ -83,7 +120,12 @@ export function LiveLayout() {
             <button className="btn btn-secondary" onClick={() => void resetSandbox()} style={{ height: 26, padding: '0 10px', fontSize: 12 }}>Réinitialiser</button>
           </div>
         )}
-        <div style={{ position: 'sticky', top: 0, zIndex: 5, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, padding: '0 28px', borderBottom: '1px solid var(--bd)', background: 'color-mix(in oklab,var(--bg) 85%,transparent)', backdropFilter: 'blur(12px)' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 5, height: 56, display: 'flex', alignItems: 'center', gap: 12, padding: '0 28px', borderBottom: '1px solid var(--bd)', background: 'color-mix(in oklab,var(--bg) 85%,transparent)', backdropFilter: 'blur(12px)' }}>
+          <button onClick={() => setNavOpen(!navOpen)} aria-label={navOpen ? 'Masquer le menu' : 'Afficher le menu'} aria-expanded={navOpen} aria-controls="menu-principal" title={navOpen ? 'Masquer le menu' : 'Afficher le menu'}
+            style={{ width: 32, height: 32, display: 'grid', placeItems: 'center', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s1)', color: 'var(--tx)', cursor: 'pointer' }}>
+            <Icon name={navOpen ? 'x' : 'menu'} />
+          </button>
+          <span style={{ flex: 1 }} />
           <button onClick={() => navigate(R.wallet)} aria-label={b ? `Solde : ${b.disponible} crédits disponibles, ${b.sequestre_sortant + b.sequestre_entrant} en séquestre` : 'Solde'}
             style={{ display: 'flex', alignItems: 'center', gap: 10, height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s1)', color: 'var(--tx)', cursor: 'pointer', font: '500 12.5px var(--mono)' }}>
             <span style={{ color: 'var(--ac-tx)' }}>{b ? b.disponible : '…'} cr</span>

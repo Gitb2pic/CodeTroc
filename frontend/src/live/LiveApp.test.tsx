@@ -88,6 +88,28 @@ describe('navigation interne (bug 1)', () => {
   });
 });
 
+describe('menu latéral repliable', () => {
+  it('le bouton hamburger rentre puis ressort la navigation, et le choix est mémorisé', async () => {
+    localStorage.clear();
+    const { unmount } = renderAt('/portefeuille');
+    await screen.findByRole('heading', { name: 'Portefeuille' });
+    const nav = () => screen.getByRole('navigation', { name: 'Navigation principale', hidden: true }).closest('aside')!;
+    expect(nav()).not.toHaveAttribute('inert');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Masquer le menu' }));
+    expect(nav()).toHaveAttribute('inert');
+    expect(screen.getByRole('button', { name: 'Afficher le menu' })).toHaveAttribute('aria-expanded', 'false');
+
+    unmount();
+    renderAt('/portefeuille');
+    await screen.findByRole('heading', { name: 'Portefeuille' });
+    expect(nav()).toHaveAttribute('inert');
+    fireEvent.click(screen.getByRole('button', { name: 'Afficher le menu' }));
+    expect(nav()).not.toHaveAttribute('inert');
+    expect(screen.getByRole('button', { name: 'Masquer le menu' })).toHaveAttribute('aria-expanded', 'true');
+  });
+});
+
 describe("retrait d'offre (bug 2)", () => {
   it("n'annonce pas de succès quand l'API répond 503", async () => {
     override = (req) => (req.method === 'POST' && req.url.endsWith('/offres/o1/retirer') ? json(503, { type: '/problems/indisponible', title: 'Service indisponible', status: 503, request_id: 'r' }) : undefined);
