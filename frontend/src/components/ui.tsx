@@ -157,7 +157,7 @@ export function useEtat() {
 
 export function SegButtons<T extends string | number>({ options, value, onChange }: { options: [T, string][]; value: T; onChange: (v: T) => void }) {
   return (
-    <div style={{ display: 'flex', padding: 3, border: '1px solid var(--bd)', borderRadius: 8, gap: 2 }}>
+    <div className="seg" style={{ display: 'flex', padding: 3, border: '1px solid var(--bd)', borderRadius: 8, gap: 2, maxWidth: '100%', overflowX: 'auto' }}>
       {options.map(([v, label]) => {
         const on = v === value;
         return (
@@ -166,8 +166,10 @@ export function SegButtons<T extends string | number>({ options, value, onChange
             onClick={() => onChange(v)}
             aria-pressed={on}
             style={{
-              flex: 1,
+              flex: '1 0 auto',
               height: 26,
+              padding: '0 10px',
+              whiteSpace: 'nowrap',
               border: 0,
               borderRadius: 6,
               background: on ? 'var(--s3)' : 'transparent',

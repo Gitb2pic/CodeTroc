@@ -28,7 +28,7 @@ export function DashboardPage() {
           const active = exchanges.filter((x) => ['PROPOSE', 'EN_COURS', 'EN_LITIGE'].includes(x.statut));
           return (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 1, background: 'var(--bd)', border: '1px solid var(--bd)', borderRadius: 12, overflow: 'hidden' }}>
+              <div className="stats stats-4">
                 {[
                   ['Disponible', `${balance.disponible} cr`],
                   ['Séquestre sortant', `${balance.sequestre_sortant} cr`],

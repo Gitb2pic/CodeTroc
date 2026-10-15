@@ -30,7 +30,7 @@ export function MemberPage() {
   return (
     <Loaded r={data} what="Ce profil">
       {({ profile: p, reviews, offers }) => (
-        <div style={{ display: 'grid', gridTemplateColumns: '320px minmax(0,1fr)', gap: 28, alignItems: 'start' }}>
+        <div className="split split-side-first">
           <aside className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
             <Avatar ini={initials(p.pseudo)} size={84} ring={repRing(p.score_reputation)} />
             <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

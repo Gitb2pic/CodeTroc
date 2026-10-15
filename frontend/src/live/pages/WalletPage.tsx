@@ -31,10 +31,10 @@ export function WalletPage() {
       </div>
       <Loaded r={balance} what="Le solde">
         {(b) => (
-          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr', gap: 1, background: 'var(--bd)', border: '1px solid var(--bd)', borderRadius: 12, overflow: 'hidden' }}>
+          <div className="stats stats-3">
             <div style={{ background: 'var(--s1)', padding: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
               <span className="kicker">Disponible</span>
-              <span style={{ font: '600 34px/1 var(--mono)', color: 'var(--ac-tx)' }}>{b.disponible} <span style={{ fontSize: 16 }}>cr</span></span>
+              <span style={{ font: '600 34px/1 var(--mono)', color: 'var(--ac-tx)', whiteSpace: 'nowrap' }}>{b.disponible} <span style={{ fontSize: 16 }}>cr</span></span>
             </div>
             <div style={{ background: 'var(--s1)', padding: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
               <span className="kicker">Séquestre sortant</span>
@@ -50,6 +50,7 @@ export function WalletPage() {
       <Loaded r={first} what="L'historique">
         {(p) => (
           <section className="card" style={{ overflow: 'hidden' }}>
+            <div className="table-scroll">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <caption className="h2" style={{ textAlign: 'left', padding: '14px 18px' }}>Mouvements</caption>
               <thead>
@@ -62,7 +63,7 @@ export function WalletPage() {
                   const [label, tone] = MOVEMENT[m.type];
                   return (
                     <tr key={m.id} style={{ borderTop: '1px solid var(--bd)' }}>
-                      <td className="mono faint" style={{ padding: '10px 18px' }}>{fmtTime(m.date)}</td>
+                      <td className="mono faint" style={{ padding: '10px 18px', whiteSpace: 'nowrap' }}>{fmtTime(m.date)}</td>
                       <td><Pill tone={tone}>{label}</Pill></td>
                       <td className="mono">{m.id_echange ? <Link to={R.exchange(m.id_echange)}>{shortId(m.id_echange)}</Link> : '—'}</td>
                       <td className="mono" style={{ textAlign: 'right', padding: '10px 18px', color: m.montant > 0 ? 'var(--ok)' : 'var(--tx)' }}>{m.montant > 0 ? '+' : '−'}{Math.abs(m.montant)} cr</td>
@@ -71,6 +72,7 @@ export function WalletPage() {
                 })}
               </tbody>
             </table>
+            </div>
             {next && (
               <div style={{ padding: 12, display: 'flex', justifyContent: 'center' }}>
                 <button className="btn btn-secondary" style={small} disabled={act.busy} onClick={loadMore}>Charger plus</button>

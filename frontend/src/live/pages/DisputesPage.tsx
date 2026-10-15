@@ -62,7 +62,7 @@ function DisputeView({ d, x, reload }: { d: S['Dispute']; x: S['Exchange']; relo
   const proofs = x.jalons.find((m) => m.id === d.id_jalon)?.preuves ?? [];
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: 24, alignItems: 'start' }}>
+    <div className="split">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <Link to={R.exchange(x.id)} className="mono faint" style={{ fontSize: 12.5 }}>← {shortId(x.id)} · {x.offre.titre}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -88,7 +88,7 @@ function DisputeView({ d, x, reload }: { d: S['Dispute']; x: S['Exchange']; relo
           ))}
         </section>
       </div>
-      <aside style={{ position: 'sticky', top: 84, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <aside className="sticky-aside">
         <div className="card" style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <span className="kicker">Montant gelé</span>
           <span style={{ font: '600 26px var(--mono)', color: 'var(--ac-tx)' }}>{d.montant} cr</span>
