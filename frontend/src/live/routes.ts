@@ -10,5 +10,6 @@ export const LIVE_ROUTES = {
   disputes: '/litiges',
   dispute: (id: string) => `/litiges/${id}`,
   member: (id: string) => `/membres/${id}`,
+  profile: '/profil',
   admin: '/administration',
 };

@@ -11,7 +11,9 @@ export function LoginPage() {
   const { status, login, reload } = useSession();
   const [outcome, setOutcome] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  useEffect(() => setOutcome(consumeLoginOutcome()), []);
+  useEffect(() => {
+    setOutcome(consumeLoginOutcome());
+  }, []);
 
   const loginAs = async (who: string) => {
     setBusy(true);

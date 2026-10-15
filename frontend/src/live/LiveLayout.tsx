@@ -7,6 +7,7 @@ import { Avatar, Icon, Logo } from '../components/ui';
 import { repRing } from '../domain/logic';
 import { useApp } from '../store/AppStore';
 import { initials } from './format';
+import { PageBoundary } from './kit';
 import { resetSandbox, SANDBOX } from '../sandbox/runtime';
 import { LIVE_ROUTES as R } from './routes';
 
@@ -20,7 +21,11 @@ export function LiveLayout() {
   const balance = useResource(() => call(() => api.GET('/me/compte')), [pathname]);
   const unread = useResource(() => call(() => api.GET('/notifications/compteur')), [pathname]);
 
-  useEffect(() => window.scrollTo({ top: 0 }), [pathname]);
+  // Corps entre accolades : scrollTo renvoie une promesse sur les Chrome récents,
+  // que React prendrait pour une fonction de nettoyage (écran noir au changement de route).
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [pathname]);
   if (!user) return null;
 
   const nav: [NavKey, string, string, string, number?][] = [
@@ -97,7 +102,9 @@ export function LiveLayout() {
           </button>
         </div>
         <div style={{ width: '100%', maxWidth: 1240, margin: '0 auto', padding: '28px 32px 80px', boxSizing: 'border-box' }}>
-          <Outlet />
+          <PageBoundary key={pathname}>
+            <Outlet />
+          </PageBoundary>
         </div>
       </main>
     </div>

@@ -33,6 +33,12 @@ function RequireSession() {
   return <Outlet />;
 }
 
+/** /profil : alias de la page membre de la personne connectée. */
+function MyProfile() {
+  const { user } = useSession();
+  return user ? <Navigate to={R.member(user.id)} replace /> : null;
+}
+
 export function LiveRoutes() {
   return (
     <SessionProvider>
@@ -50,6 +56,7 @@ export function LiveRoutes() {
             <Route path={R.disputes} element={<DisputesPage />} />
             <Route path="/litiges/:id" element={<DisputePage />} />
             <Route path="/membres/:id" element={<MemberPage />} />
+            <Route path={R.profile} element={<MyProfile />} />
             <Route path={R.admin} element={<AdminPage />} />
           </Route>
         </Route>
