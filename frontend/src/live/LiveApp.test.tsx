@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '../api/client';
@@ -85,6 +85,80 @@ describe('navigation interne (bug 1)', () => {
     } finally {
       window.removeEventListener('error', onError);
     }
+  });
+});
+
+function mockViewport(width: number) {
+  window.matchMedia = ((query: string) => {
+    const min = /\(min-width: (\d+)px\)/.exec(query);
+    const max = /\(max-width: (\d+)px\)/.exec(query);
+    const matches = min ? width >= +min[1] : max ? width <= +max[1] : false;
+    return { matches, media: query, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false } as MediaQueryList;
+  }) as typeof window.matchMedia;
+}
+
+describe('menu latéral', () => {
+  afterEach(() => {
+    // @ts-expect-error jsdom n'a pas matchMedia : on remet l'état d'origine
+    delete window.matchMedia;
+  });
+
+  it('bureau : le bouton réduit le menu en rail et le choix est mémorisé', async () => {
+    localStorage.clear();
+    mockViewport(1440);
+    const { unmount } = renderAt('/portefeuille');
+    await screen.findByRole('heading', { name: 'Portefeuille' });
+    const shell = () => document.querySelector('.shell')!;
+    expect(shell()).toHaveAttribute('data-mode', 'desktop');
+    expect(shell()).toHaveAttribute('data-rail', 'false');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Réduire le menu' }));
+    expect(shell()).toHaveAttribute('data-rail', 'true');
+    expect(screen.getByRole('button', { name: 'Agrandir le menu' })).toHaveAttribute('aria-expanded', 'false');
+    // En rail, chaque entrée garde son nom accessible et une infobulle.
+    expect(screen.getByRole('button', { name: 'Catalogue' })).toHaveAttribute('title', 'Catalogue');
+
+    unmount();
+    renderAt('/portefeuille');
+    await screen.findByRole('heading', { name: 'Portefeuille' });
+    expect(shell()).toHaveAttribute('data-rail', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Agrandir le menu' }));
+    expect(shell()).toHaveAttribute('data-rail', 'false');
+  });
+
+  it('tablette : rail d\'icônes, déployé par-dessus la page par le bouton', async () => {
+    mockViewport(820);
+    renderAt('/portefeuille');
+    await screen.findByRole('heading', { name: 'Portefeuille' });
+    const shell = () => document.querySelector('.shell')!;
+    expect(shell()).toHaveAttribute('data-mode', 'tablet');
+    expect(shell()).toHaveAttribute('data-rail', 'true');
+    expect(screen.queryByRole('navigation', { name: 'Navigation rapide' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ouvrir le menu' }));
+    expect(shell()).toHaveAttribute('data-rail', 'false');
+    expect(shell()).toHaveAttribute('data-drawer', 'true');
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(shell()).toHaveAttribute('data-drawer', 'false');
+    expect(shell()).toHaveAttribute('data-rail', 'true');
+  });
+
+  it('mobile : tiroir fermé hors d\'atteinte, barre d\'onglets, tiroir refermé après navigation', async () => {
+    mockViewport(390);
+    renderAt('/portefeuille');
+    await screen.findByRole('heading', { name: 'Portefeuille' });
+    const aside = () => document.querySelector('aside')!;
+    expect(document.querySelector('.shell')).toHaveAttribute('data-mode', 'mobile');
+    expect(aside()).toHaveAttribute('inert');
+    const tabs = screen.getByRole('navigation', { name: 'Navigation rapide' });
+    expect(within(tabs).getAllByRole('button')).toHaveLength(5);
+    expect(within(tabs).getByRole('button', { name: 'Portefeuille' })).toHaveAttribute('aria-current', 'page');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ouvrir le menu' }));
+    expect(aside()).not.toHaveAttribute('inert');
+    fireEvent.click(within(aside()).getByRole('button', { name: 'Litiges' }));
+    expect(await screen.findByRole('heading', { name: 'Litiges' })).toBeInTheDocument();
+    expect(aside()).toHaveAttribute('inert');
   });
 });
 

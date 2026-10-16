@@ -23,7 +23,7 @@ export const LIVE = import.meta.env.VITE_DATA === 'api';
 function Shell() {
   const { theme, toast } = useApp();
   return (
-    <div className="app-root" data-theme={theme}>
+    <div className="app-root" data-theme={theme} data-live={LIVE ? '' : undefined}>
       {LIVE ? <LiveRoutes /> : <DemoRoutes />}
       {/* Région toujours présente pour que les lecteurs d'écran annoncent chaque toast. */}
       <div role="status" aria-live="polite">

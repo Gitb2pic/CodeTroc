@@ -31,8 +31,8 @@ export function CatalogPage() {
           </button>
         }
       />
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <label style={{ flex: 1, minWidth: 240, display: 'flex', alignItems: 'center', gap: 8, height: 40, padding: '0 12px', borderRadius: 9, border: '1px solid var(--bd2)', background: 'var(--s1)', color: 'var(--tx3)' }}>
+      <div className="filters">
+        <label className="search" style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, padding: '0 12px', borderRadius: 9, border: '1px solid var(--bd2)', background: 'var(--s1)', color: 'var(--tx3)' }}>
           <Icon name="search" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="docker, react, terraform…" aria-label="Rechercher une offre" style={{ flex: 1, border: 0, background: 'none', color: 'var(--tx)', fontSize: 14, outline: 'none' }} />
         </label>

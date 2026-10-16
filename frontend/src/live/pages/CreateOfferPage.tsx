@@ -51,9 +51,9 @@ function OfferForm({ packs }: { packs: S['Pack'][] }) {
       <fieldset style={{ border: 0, margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <legend style={{ fontWeight: 500, fontSize: 13, marginBottom: 6 }}>Jalons (le prix est leur somme)</legend>
         {milestones.map((m, i) => (
-          <div key={i} style={{ display: 'flex', gap: 8 }}>
-            <input className="field" required maxLength={120} value={m.titre} onChange={(e) => setMs(i, { titre: e.target.value })} placeholder={`Jalon ${i + 1}`} aria-label={`Titre du jalon ${i + 1}`} style={{ flex: 1 }} />
-            <input className="field" required type="number" min={1} value={m.montant || ''} onChange={(e) => setMs(i, { montant: +e.target.value })} aria-label={`Montant du jalon ${i + 1}`} style={{ width: 110 }} />
+          <div key={i} className="jalon-row">
+            <input required maxLength={120} value={m.titre} onChange={(e) => setMs(i, { titre: e.target.value })} placeholder={`Jalon ${i + 1}`} aria-label={`Titre du jalon ${i + 1}`} className="field jalon-titre" />
+            <input required type="number" min={1} value={m.montant || ''} onChange={(e) => setMs(i, { montant: +e.target.value })} aria-label={`Montant du jalon ${i + 1}`} className="field jalon-montant" />
             {milestones.length > 1 && <button type="button" className="btn btn-secondary" style={small} onClick={() => setMilestones((ms) => ms.filter((_, j) => j !== i))} aria-label={`Retirer le jalon ${i + 1}`}>×</button>}
           </div>
         ))}

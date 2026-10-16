@@ -50,7 +50,7 @@ function ExchangeView({ x, reload }: { x: S['Exchange']; reload(): void }) {
 
       <NextStep x={x} role={role} yourTurn={yourTurn} reload={reload} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 24, alignItems: 'start' }}>
+      <div className="split split-340">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <section className="card" style={{ padding: 20 }}>
             <h2 className="h2" style={{ marginBottom: 18 }}>Jalons</h2>
@@ -69,7 +69,7 @@ function ExchangeView({ x, reload }: { x: S['Exchange']; reload(): void }) {
           <Messages exchangeId={x.id} canWrite={role !== 'ARBITRE'} other={other.pseudo} />
         </div>
 
-        <aside style={{ position: 'sticky', top: 84, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <aside className="sticky-aside">
           <div className="card" style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Icon name="lock" style={{ color: 'var(--ac-tx)' }} />

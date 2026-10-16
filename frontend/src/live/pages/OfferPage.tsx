@@ -40,7 +40,7 @@ function OfferView({ o, pack }: { o: S['Offer']; pack: S['Pack'] }) {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: 28, alignItems: 'start' }}>
+    <div className="split">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <Link to={R.cat} className="mono faint" style={{ fontSize: 12.5 }}>← Catalogue</Link>
         <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{o.pack.competences.map((c) => <Tag key={c}>{c}</Tag>)}</span>
@@ -76,7 +76,7 @@ function OfferView({ o, pack }: { o: S['Offer']; pack: S['Pack'] }) {
           </ol>
         </section>
       </div>
-      <aside style={{ position: 'sticky', top: 84, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <aside className="sticky-aside">
         <div className="card" style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
           <span style={{ font: '600 28px var(--mono)', color: 'var(--ac-tx)' }}>{o.prix_credits} cr</span>
           <span className="mono muted" style={{ fontSize: 12.5 }}>{o.delai_jours} j · {plural(o.jalons.length, 'jalon')} · bloqués en séquestre à l'acceptation</span>
