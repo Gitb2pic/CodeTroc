@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -208,7 +209,7 @@ func (s *Service) startSprint(ctx context.Context, tx pgx.Tx, r exRow, sp sprint
 func (s *Service) advanceSprints(ctx context.Context, tx pgx.Tx, exID uuid.UUID) error {
 	var locked uuid.UUID
 	err := tx.QueryRow(ctx, `SELECT id_echange FROM projet_scrum WHERE id_echange = $1 FOR UPDATE`, exID).Scan(&locked)
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil
 	}
 	if err != nil {

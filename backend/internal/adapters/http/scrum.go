@@ -221,7 +221,7 @@ func (h scrumHandlers) stories(c *gin.Context) {
 	}
 	f := app.StoryFilter{Status: scrum.StoryStatus(c.Query("statut")), Backlog: c.Query("sprint") == "backlog"}
 	for name, dst := range map[string]**int{"sprint": &f.Sprint, "jalon": &f.Milestone} {
-		if v := c.Query(name); v != "" && !(name == "sprint" && v == "backlog") {
+		if v := c.Query(name); v != "" && (name != "sprint" || v != "backlog") {
 			n, err := strconv.Atoi(v)
 			if err != nil {
 				fail(c, &app.Error{Kind: app.KindInvalid, Code: "parametre-invalide", Title: "Requête invalide", Detail: name + " doit être un entier."})

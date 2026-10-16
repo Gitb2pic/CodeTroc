@@ -117,7 +117,7 @@ func TestSprintIssue(t *testing.T) {
 		Stories: []IssueStory{{Issue: 12, Title: "Connexion *GitHub*", Points: ptr(5)}, {Title: "Sans issue"}},
 		Link:    "https://codetroc.labtools.tech/echanges/x",
 	})
-	assert.Equal(t, "[CodeTroc] Sprint 3 — Jalon 2 : API @​team", is.Title)
+	assert.Equal(t, "[CodeTroc] Sprint 3 — Jalon 2 : API @\u200bteam", is.Title)
 	assert.ElementsMatch(t, []string{"codetroc", "type:sprint", "sprint:3", "jalon:2"}, is.Labels)
 	assert.Contains(t, is.Body, "**Objectif du sprint** : à définir au Sprint Planning")
 	assert.Contains(t, is.Body, "**Période** : 20/10/2026 → 27/10/2026")
@@ -133,7 +133,7 @@ func TestSprintIssue(t *testing.T) {
 
 func TestStoryIssue(t *testing.T) {
 	is := StoryIssue(StoryIssueData{Title: "Liste @all", Description: "<b>x</b>", Criteria: []string{"Given a"}, Sprint: 2, MilestoneOrder: 1, Points: ptr(3)})
-	assert.Equal(t, "Liste @​all", is.Title)
+	assert.Equal(t, "Liste @\u200ball", is.Title)
 	assert.ElementsMatch(t, []string{"codetroc", "type:story", "sprint:2", "jalon:1", "points:3"}, is.Labels)
 	assert.NotContains(t, is.Body, "<b>")
 	assert.Contains(t, is.Body, "- [ ] Given a")

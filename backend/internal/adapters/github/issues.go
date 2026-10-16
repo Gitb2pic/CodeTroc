@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -119,7 +120,8 @@ func classify(status int, hdr http.Header, err error) error {
 		return nil
 	}
 	body := ""
-	if ae, ok := err.(*apiError); ok {
+	var ae *apiError
+	if errors.As(err, &ae) {
 		body = strings.ToLower(ae.body)
 	}
 	switch {

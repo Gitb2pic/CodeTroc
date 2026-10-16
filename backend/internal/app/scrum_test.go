@@ -178,7 +178,7 @@ func TestScrum_GitHubSync(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, stories[0].Issue)
 	storyIssue := gh.issue(*stories[0].Issue)
-	assert.Equal(t, "Connexion @​octocat GitHub", storyIssue.Title, "mention neutralisée")
+	assert.Equal(t, "Connexion @\u200boctocat GitHub", storyIssue.Title, "mention neutralisée")
 	assert.Contains(t, storyIssue.Labels, "points:5")
 	// L'issue du sprint référence la story une fois son issue créée.
 	runJobs(t, e)

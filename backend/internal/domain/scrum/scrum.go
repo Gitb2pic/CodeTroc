@@ -180,7 +180,7 @@ func truncate(s string, max int) string {
 }
 
 // neutralize empêche les mentions (@) de notifier des tiers.
-func neutralize(s string) string { return strings.ReplaceAll(s, "@", "@​") }
+func neutralize(s string) string { return strings.ReplaceAll(s, "@", "@\u200b") }
 
 var mdEscaper = strings.NewReplacer(
 	`\`, `\\`, "`", "\\`", "*", `\*`, "_", `\_`, "[", `\[`, "]", `\]`, "|", `\|`, "~", `\~`,
