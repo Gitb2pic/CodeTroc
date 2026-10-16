@@ -473,10 +473,10 @@ const exchangeSelect = `
 	SELECT e.id_echange, e.statut_echange, e.montant_total, e.delai_jours, e.depot_owner, e.depot_nom, e.besoin,
 	       e.date_creation, e.date_acceptation, e.date_cloture, e.annulation_demandee_par,
 	       e.id_offre, e.id_annonce, COALESCE(o.titre_offre, a.titre_annonce), p.titre_pack, p.type_preuve,
-	       d.id_utilisateur, d.pseudo, d.github_login, d.score_reputation::float8,
+	       d.id_utilisateur, d.pseudo, COALESCE(d.github_login, ''), d.score_reputation::float8,
 	       (SELECT count(*) FROM jalon j2 JOIN echange e2 USING (id_echange)
 	         WHERE e2.id_prestataire = d.id_utilisateur AND j2.statut_jalon = 'LIBERE')::int,
-	       r.id_utilisateur, r.pseudo, r.github_login, r.score_reputation::float8,
+	       r.id_utilisateur, r.pseudo, COALESCE(r.github_login, ''), r.score_reputation::float8,
 	       (SELECT count(*) FROM jalon j2 JOIN echange e2 USING (id_echange)
 	         WHERE e2.id_prestataire = r.id_utilisateur AND j2.statut_jalon = 'LIBERE')::int,
 	       COALESCE((SELECT solde FROM compte WHERE id_echange = e.id_echange), 0),

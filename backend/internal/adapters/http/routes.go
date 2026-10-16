@@ -20,6 +20,13 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	a.GET("/github/callback", auth.callback)
 	a.POST("/refresh", auth.refresh)
 	a.POST("/logout", auth.logout)
+	a.GET("/methodes", auth.methods)
+	a.POST("/inscription", auth.register)
+	a.POST("/connexion", auth.passwordLogin)
+	a.POST("/email/confirmer", auth.confirmEmail)
+	a.POST("/email/renvoyer", auth.resendConfirmation)
+	a.POST("/mot-de-passe/oubli", auth.forgotPassword)
+	a.POST("/mot-de-passe/reinitialiser", auth.resetPassword)
 
 	// Écritures limitées par membre (après authentification).
 	m := v1.Group("", requireAuth(o.App), rateLimit(o.writeLimiter, func(c *gin.Context) string {
@@ -30,6 +37,7 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	}))
 	m.GET("/me", auth.me)
 	m.DELETE("/me", auth.deleteMe)
+	m.POST("/me/github/lier", auth.linkGitHub)
 
 	cat := catalogHandlers{svc: o.App}
 	m.PATCH("/me", cat.updateMe)

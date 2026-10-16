@@ -106,7 +106,7 @@ function ExchangeView({ x, reload }: { x: S['Exchange']; reload(): void }) {
             <Avatar ini={initials(other.pseudo)} size={32} fontSize={9} />
             <span style={{ flex: 1, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
               <span style={{ fontSize: 13, fontWeight: 500 }}>{other.pseudo}</span>
-              <span className="mono faint" style={{ fontSize: 11.5 }}>@{other.github_login} · {other.score_reputation.toFixed(1)} ★</span>
+              <span className="mono faint" style={{ fontSize: 11.5 }}>{other.github_login && `@${other.github_login} · `}{other.score_reputation.toFixed(1)} ★</span>
             </span>
           </Link>
           {x.statut === 'TERMINE' && role !== 'ARBITRE' && <ReviewForm exchangeId={x.id} other={other.pseudo} />}

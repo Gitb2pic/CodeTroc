@@ -159,7 +159,7 @@ const annSelect = `
 	       p.id_pack, p.titre_pack, p.type_preuve,
 	       COALESCE((SELECT array_agg(c.libelle_competence ORDER BY c.libelle_competence)
 	                 FROM requerir r JOIN competence c USING (id_competence) WHERE r.id_pack = p.id_pack), '{}'),
-	       u.id_utilisateur, u.pseudo, u.github_login, u.score_reputation::float8,
+	       u.id_utilisateur, u.pseudo, COALESCE(u.github_login, ''), u.score_reputation::float8,
 	       (` + verifiedDeliveriesSQL + `),
 	       (SELECT count(*) FROM candidature c WHERE c.id_annonce = a.id_annonce AND c.statut_candidature = 'EN_ATTENTE')::int,
 	       (SELECT c.id_candidature FROM candidature c WHERE c.id_annonce = a.id_annonce
@@ -328,6 +328,9 @@ func (s *Service) WithdrawAnnouncement(ctx context.Context, a Actor, id uuid.UUI
 
 // Apply dépose la candidature d'un prestataire sur une annonce ouverte.
 func (s *Service) Apply(ctx context.Context, a Actor, annID uuid.UUID, in ApplicationInput) (ApplicationView, error) {
+	if err := s.requireGitHub(ctx, a); err != nil {
+		return ApplicationView{}, err
+	}
 	ann, err := loadAnnouncement(ctx, s.db, annID, false)
 	if err != nil {
 		return ApplicationView{}, err
@@ -393,7 +396,7 @@ func (s *Service) Apply(ctx context.Context, a Actor, annID uuid.UUID, in Applic
 const appSelect = `
 	SELECT c.id_candidature, c.id_annonce, c.prix_credits, c.delai_jours, c.message, c.jalons_proposes,
 	       c.statut_candidature, c.date_candidature, c.date_decision,
-	       u.id_utilisateur, u.pseudo, u.github_login, u.score_reputation::float8,
+	       u.id_utilisateur, u.pseudo, COALESCE(u.github_login, ''), u.score_reputation::float8,
 	       (` + verifiedDeliveriesSQL + `)
 	FROM candidature c
 	JOIN utilisateur u ON u.id_utilisateur = c.id_prestataire`

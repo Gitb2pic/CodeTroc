@@ -38,7 +38,7 @@ func (s *Service) AdminListUsers(ctx context.Context, a Actor, q string, limit i
 	pattern := "%" + strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(strings.TrimSpace(q)) + "%"
 	rows, err := s.db.Query(ctx, `
 		SELECT `+userColumns+` FROM utilisateur
-		WHERE (pseudo ILIKE $1 OR github_login ILIKE $1)
+		WHERE (pseudo ILIKE $1 OR github_login ILIKE $1 OR email ILIKE $1)
 		  AND ($2::timestamptz IS NULL OR (date_inscription, id_utilisateur) < ($2, $3))
 		ORDER BY date_inscription DESC, id_utilisateur DESC LIMIT $4`, pattern, at, id, limit+1)
 	if err != nil {
@@ -155,8 +155,12 @@ func (s *Service) DeleteAccount(ctx context.Context, a Actor) error {
 		}
 		for _, q := range []string{
 			`INSERT INTO github_supprime (empreinte, date_suppression)
-			   SELECT sha256(github_id::text::bytea), $2 FROM utilisateur WHERE id_utilisateur = $1
+			   SELECT sha256(github_id::text::bytea), $2 FROM utilisateur WHERE id_utilisateur = $1 AND github_id IS NOT NULL
 			 ON CONFLICT DO NOTHING`,
+			`INSERT INTO github_supprime (empreinte, date_suppression)
+			   SELECT sha256(('email:' || lower(email))::bytea), $2 FROM utilisateur WHERE id_utilisateur = $1 AND mot_de_passe_hash IS NOT NULL
+			 ON CONFLICT DO NOTHING`,
+			`DELETE FROM jeton_email WHERE id_utilisateur = $1`,
 			`UPDATE offre SET statut_offre = 'RETIREE' WHERE id_prestataire = $1 AND statut_offre = 'PUBLIEE'`,
 			`UPDATE jeton_rafraichissement SET revoque_le = $2 WHERE id_utilisateur = $1 AND revoque_le IS NULL`,
 			`UPDATE litige SET id_arbitre = NULL, date_affectation = NULL WHERE id_arbitre = $1 AND statut_litige = 'OUVERT'`,
@@ -174,6 +178,7 @@ func (s *Service) DeleteAccount(ctx context.Context, a Actor) error {
 		suffix := strings.ReplaceAll(a.ID.String(), "-", "")[:12]
 		if _, err := tx.Exec(ctx, `
 			UPDATE utilisateur SET pseudo = $2, email = NULL, bio = NULL, github_login = 'supprime', github_id = $3,
+			  mot_de_passe_hash = NULL, email_verifie_le = NULL,
 			  role = 'MEMBRE', statut_utilisateur = 'SUPPRIME', date_suppression = $4
 			WHERE id_utilisateur = $1`, a.ID, "membre-supprime-"+suffix, placeholderGitHubID, s.now()); err != nil {
 			return err

@@ -286,6 +286,9 @@ type OfferView struct {
 
 // CreateOffer publie une offre sur un pack actif (UC04, RG08).
 func (s *Service) CreateOffer(ctx context.Context, a Actor, in OfferInput) (OfferView, error) {
+	if err := s.requireGitHub(ctx, a); err != nil {
+		return OfferView{}, err
+	}
 	pack, err := s.GetPack(ctx, nil, in.PackID)
 	if errors.Is(err, ErrNotFound) {
 		return OfferView{}, errPackUnavail
@@ -338,7 +341,7 @@ const offerSelect = `
 	       p.id_pack, p.titre_pack, p.type_preuve,
 	       COALESCE((SELECT array_agg(c.libelle_competence ORDER BY c.libelle_competence)
 	                 FROM requerir r JOIN competence c USING (id_competence) WHERE r.id_pack = p.id_pack), '{}'),
-	       u.id_utilisateur, u.pseudo, u.github_login, u.score_reputation::float8,
+	       u.id_utilisateur, u.pseudo, COALESCE(u.github_login, ''), u.score_reputation::float8,
 	       (` + verifiedDeliveriesSQL + `)
 	FROM offre o
 	JOIN pack p USING (id_pack)

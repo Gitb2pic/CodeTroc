@@ -50,7 +50,7 @@ function UserRow({ u, self, onDone }: { u: S['AdminUser']; self: boolean; onDone
     act.run(() => call(() => api.PATCH('/admin/utilisateurs/{id}', { params: { path: { id: u.id } }, body })), 'Membre mis à jour').then(onDone);
   return (
     <tr style={{ borderTop: '1px solid var(--bd)' }}>
-      <td style={{ padding: '8px 0' }}><Link to={R.member(u.id)}>{u.pseudo}</Link> <span className="mono faint">@{u.github_login}</span></td>
+      <td style={{ padding: '8px 0' }}><Link to={R.member(u.id)}>{u.pseudo}</Link> <span className="mono faint">{u.github_login ? `@${u.github_login}` : u.email}</span></td>
       <td className="mono faint">{fmtDate(u.date_inscription)}</td>
       <td>
         <select aria-label={`Rôle de ${u.pseudo}`} value={u.role} disabled={self || u.statut === 'SUPPRIME' || act.busy} onChange={(e) => patch({ role: e.target.value as S['AdminUser']['role'] })}>

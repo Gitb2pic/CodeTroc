@@ -72,24 +72,34 @@ func (s *Service) transfer(ctx context.Context, tx pgx.Tx, r transferReq) (bool,
 // createUserAccount ouvre le compte de crédits d'un utilisateur et verse le
 // bonus de bienvenue depuis ÉMISSION (RG01, RG02, D1).
 func (s *Service) createUserAccount(ctx context.Context, tx pgx.Tx, userID uuid.UUID) error {
-	var accountID, issuance uuid.UUID
-	if err := tx.QueryRow(ctx, `INSERT INTO compte (type_compte, id_utilisateur) VALUES ('UTILISATEUR', $1) RETURNING id_compte`, userID).Scan(&accountID); err != nil {
+	if _, err := tx.Exec(ctx, `INSERT INTO compte (type_compte, id_utilisateur) VALUES ('UTILISATEUR', $1)`, userID); err != nil {
 		return err
 	}
+	return s.grantWelcomeBonus(ctx, tx, userID)
+}
+
+// grantWelcomeBonus verse le bonus de bienvenue (D1), une seule fois par
+// compte (clé bonus:<id>). D13 : pas de second bonus pour un compte GitHub ou
+// une adresse email déjà inscrits puis supprimés.
+func (s *Service) grantWelcomeBonus(ctx context.Context, tx pgx.Tx, userID uuid.UUID) error {
 	if s.settings.WelcomeBonus <= 0 {
 		return nil
 	}
-	// D13 : pas de second bonus pour un compte GitHub déjà inscrit puis supprimé.
 	var returning bool
 	if err := tx.QueryRow(ctx, `
-		SELECT EXISTS (SELECT 1 FROM github_supprime g JOIN utilisateur u ON g.empreinte = sha256(u.github_id::text::bytea)
+		SELECT EXISTS (SELECT 1 FROM github_supprime g JOIN utilisateur u
+		                 ON g.empreinte IN (sha256(u.github_id::text::bytea), sha256(('email:' || lower(u.email))::bytea))
 		               WHERE u.id_utilisateur = $1)`, userID).Scan(&returning); err != nil {
 		return err
 	}
 	if returning {
 		return nil
 	}
+	var issuance, accountID uuid.UUID
 	if err := tx.QueryRow(ctx, `SELECT id_compte FROM compte WHERE type_compte = 'EMISSION'`).Scan(&issuance); err != nil {
+		return err
+	}
+	if err := tx.QueryRow(ctx, `SELECT id_compte FROM compte WHERE id_utilisateur = $1`, userID).Scan(&accountID); err != nil {
 		return err
 	}
 	_, err := s.transfer(ctx, tx, transferReq{From: issuance, To: accountID, Amount: s.settings.WelcomeBonus, Kind: ledger.Bonus, Key: "bonus:" + userID.String()})

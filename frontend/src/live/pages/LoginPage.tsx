@@ -5,12 +5,15 @@ import { Landing } from '../../components/Landing';
 import { ErrorBanner, Icon } from '../../components/ui';
 import { PERSONAS, SANDBOX, sandboxLogin } from '../../sandbox/runtime';
 import { LIVE_ROUTES as R } from '../routes';
+import { EmailAuthCard, useAuthMethods } from './EmailAuth';
 
 /** Landing publique du mode API : connexion GitHub, ou choix d'un persona dans le bac à sable. */
 export function LoginPage() {
   const { status, login, reload } = useSession();
   const [outcome, setOutcome] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const methods = useAuthMethods();
+  const emailOpen = !SANDBOX && methods?.email === true;
   useEffect(() => {
     setOutcome(consumeLoginOutcome());
   }, []);
@@ -45,9 +48,10 @@ export function LoginPage() {
     );
 
   const extra =
-    outcome || SANDBOX ? (
+    outcome || SANDBOX || emailOpen ? (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {outcome && <ErrorBanner onRetry={SANDBOX ? undefined : login}>{outcome}</ErrorBanner>}
+        {emailOpen && <EmailAuthCard />}
         {SANDBOX && (
           <div className="card" style={{ borderRadius: 14, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

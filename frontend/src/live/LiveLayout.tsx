@@ -165,7 +165,7 @@ export function LiveLayout() {
           <Avatar ini={initials(user.pseudo)} size={32} ring={repRing(user.score_reputation)} fontSize={10} />
           <span className="side-label side-who">
             <span className="ellipsis" style={{ fontSize: 13, fontWeight: 500 }}>{user.pseudo}</span>
-            <span className="ellipsis mono faint" style={{ fontSize: 11.5 }}>@{user.github_login}</span>
+            {user.github_login ? <span className="ellipsis mono faint" style={{ fontSize: 11.5 }}>@{user.github_login}</span> : <span className="ellipsis faint" style={{ fontSize: 11.5 }}>{user.email}</span>}
           </span>
           <button className="side-logout" onClick={signOut} aria-label="Se déconnecter" title="Se déconnecter">
             <Icon name="log-out" />

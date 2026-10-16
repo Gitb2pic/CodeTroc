@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/mail"
 	"net/netip"
 	"os"
 	"strconv"
@@ -53,7 +54,18 @@ type Config struct {
 
 	// Coffre : clé maître (KEK) de 32 octets.
 	VaultKEK []byte
+
+	// Email (F18) : relais SMTP. Sans SMTP_HOST, l'inscription par email est
+	// fermée en production ; en développement, les emails vont au journal.
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUser     string
+	SMTPPassword string
+	SMTPFrom     string
 }
+
+// SMTPEnabled indique si l'envoi d'emails est configuré.
+func (c Config) SMTPEnabled() bool { return c.SMTPHost != "" }
 
 // GitHubOAuthEnabled indique si la connexion GitHub est configurée.
 func (c Config) GitHubOAuthEnabled() bool { return c.GitHubClientID != "" }
@@ -131,6 +143,7 @@ func Load(getenv Getenv) (Config, error) {
 	errs = append(errs, loadAuth(getenv, &cfg)...)
 	errs = append(errs, loadGitHub(getenv, &cfg)...)
 	errs = append(errs, loadVault(getenv, &cfg)...)
+	errs = append(errs, loadSMTP(getenv, &cfg)...)
 	return cfg, errors.Join(errs...)
 }
 
@@ -245,6 +258,36 @@ func loadVault(getenv Getenv, cfg *Config) []error {
 	}
 	cfg.VaultKEK = kek
 	return nil
+}
+
+func loadSMTP(getenv Getenv, cfg *Config) []error {
+	cfg.SMTPHost, _ = getenv("SMTP_HOST")
+	if cfg.SMTPHost == "" {
+		return nil
+	}
+	var errs []error
+	cfg.SMTPPort = 587
+	if v, ok := getenv("SMTP_PORT"); ok && v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n <= 0 || n > 65535 {
+			errs = append(errs, fmt.Errorf("SMTP_PORT : port attendu, reçu %q", v))
+		}
+		cfg.SMTPPort = n
+	}
+	cfg.SMTPUser, _ = getenv("SMTP_USER")
+	pw, err := optionalSecret(getenv, "SMTP_PASSWORD")
+	if err != nil {
+		errs = append(errs, err)
+	}
+	cfg.SMTPPassword = pw
+	cfg.SMTPFrom, _ = getenv("SMTP_FROM")
+	if _, err := mail.ParseAddress(cfg.SMTPFrom); err != nil {
+		errs = append(errs, fmt.Errorf("SMTP_FROM : adresse attendue (ex. CodeTroc <no-reply@exemple.fr>), reçu %q", cfg.SMTPFrom))
+	}
+	if (cfg.SMTPUser == "") != (cfg.SMTPPassword == "") {
+		errs = append(errs, errors.New("SMTP_USER et SMTP_PASSWORD vont ensemble"))
+	}
+	return errs
 }
 
 // optionalSecret lit un secret facultatif (vide s'il n'est pas défini).

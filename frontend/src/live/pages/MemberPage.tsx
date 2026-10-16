@@ -35,7 +35,7 @@ export function MemberPage() {
             <Avatar ini={initials(p.pseudo)} size={84} ring={repRing(p.score_reputation)} />
             <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={{ fontSize: 20, fontWeight: 600 }}>{p.pseudo}</span>
-              <a className="mono faint" style={{ fontSize: 12.5 }} href={`https://github.com/${p.github_login}`} target="_blank" rel="noreferrer noopener">@{p.github_login}</a>
+              {p.github_login && <a className="mono faint" style={{ fontSize: 12.5 }} href={`https://github.com/${p.github_login}`} target="_blank" rel="noreferrer noopener">@{p.github_login}</a>}
             </span>
             {p.bio && <p style={{ margin: 0, fontSize: 13.5, whiteSpace: 'pre-wrap' }}>{p.bio}</p>}
             <span className="mono muted" style={{ fontSize: 12.5 }}>
@@ -47,6 +47,7 @@ export function MemberPage() {
             </span>
           </aside>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {isMe && user && !user.github_lie && <LinkGitHub />}
             {isMe && <EditProfile profile={p} onSaved={data.reload} onDeleted={() => navigate(R.landing)} />}
             <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <h2 className="h2">Offres publiées</h2>
@@ -148,5 +149,26 @@ function EditProfile({ profile, onSaved, onDeleted }: { profile: S['PublicProfil
       </div>
       <FormError>{del.error}</FormError>
     </form>
+  );
+}
+
+/** Compte email sans GitHub (F18) : la liaison ouvre l'offre et la candidature. */
+function LinkGitHub() {
+  const link = useAction();
+  const start = async () => {
+    const r = await link.run(() => call(() => api.POST('/me/github/lier')));
+    if (r) window.location.assign(r.url);
+  };
+  return (
+    <section className="card" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <h2 className="h2">Lier GitHub</h2>
+      <span className="muted" style={{ fontSize: 13.5 }}>
+        Pour proposer tes services (offres, candidatures), lie ton compte GitHub : c’est lui qui prouve tes livraisons. Tu garderas ta connexion par email.
+      </span>
+      <FormError>{link.error}</FormError>
+      <button type="button" className="btn btn-primary" disabled={link.busy} onClick={start} style={{ ...small, alignSelf: 'flex-start' }}>
+        <Icon name="github" /> Lier mon compte GitHub
+      </button>
+    </section>
   );
 }

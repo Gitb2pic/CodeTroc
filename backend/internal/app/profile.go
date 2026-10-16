@@ -166,7 +166,7 @@ type PublicProfile struct {
 func (s *Service) PublicProfile(ctx context.Context, id uuid.UUID) (PublicProfile, error) {
 	var p PublicProfile
 	err := s.db.QueryRow(ctx, `
-		SELECT u.id_utilisateur, u.pseudo, u.github_login, u.bio, u.score_reputation::float8, u.date_inscription,
+		SELECT u.id_utilisateur, u.pseudo, COALESCE(u.github_login, ''), u.bio, u.score_reputation::float8, u.date_inscription,
 		       (`+verifiedDeliveriesSQL+`), (`+reviewsCountSQL+`)
 		FROM utilisateur u
 		WHERE u.id_utilisateur = $1 AND u.statut_utilisateur <> 'SUPPRIME'`, id).

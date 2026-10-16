@@ -49,6 +49,12 @@ services:
       GITHUB_APP_ID: ${GITHUB_APP_ID:?GITHUB_APP_ID manquant dans .env}
       GITHUB_APP_PRIVATE_KEY_FILE: /run/secrets/github_app_private_key
       GITHUB_WEBHOOK_SECRET_FILE: /run/secrets/github_webhook_secret
+      # Email (F18) : sans SMTP_HOST dans .env, l'inscription par email reste fermée.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
       # Les variables directes de compose.yaml sont vidées : seuls les fichiers comptent.
       GITHUB_CLIENT_SECRET: !reset null
       GITHUB_APP_PRIVATE_KEY: !reset null

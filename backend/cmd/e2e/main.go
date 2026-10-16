@@ -18,6 +18,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,7 @@ const frontCSP = "default-src 'self'; script-src 'self'; style-src 'self' https:
 	"frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
 // Membres proposés par la fausse page d'autorisation GitHub.
-var members = []string{"sami", "lea", "arbitre", "admin", "nina", "theo"}
+var members = []string{"sami", "lea", "arbitre", "admin", "nina", "theo", "zoe"}
 
 var authorize = template.Must(template.New("a").Parse(`<!doctype html><meta charset="utf-8"><title>Faux GitHub</title>
 <h1>Faux GitHub (e2e)</h1>{{range .Members}}<p><a href="/api/v1/auth/github/callback?state={{$.State}}&code={{.}}">Continuer en tant que {{.}}</a></p>{{end}}`))
@@ -78,7 +79,9 @@ func run() error {
 		return err
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
-	svc := app.New(app.Deps{DB: pool, Tokens: tokens, OAuth: devfake.OAuth{AuthorizePath: "/fake-github/authorize"}, GitHub: devfake.GitHub{DB: pool}, Vault: sealer, Settings: app.DefaultSettings()})
+	mailbox := &outbox{}
+	svc := app.New(app.Deps{DB: pool, Tokens: tokens, OAuth: devfake.OAuth{AuthorizePath: "/fake-github/authorize"}, GitHub: devfake.GitHub{DB: pool}, Vault: sealer,
+		Mailer: mailbox, AppURL: "http://" + listenAddr(), Settings: app.DefaultSettings()})
 	router, err := httpapi.NewRouter(httpapi.Options{
 		Logger: logger, DB: pool, MaxBodyBytes: 1 << 20, ServeSpec: true, Spec: api.Spec, App: svc,
 		FrontendURL: "/tableau-de-bord", CookieSecure: false,
@@ -101,6 +104,16 @@ func run() error {
 		c.Status(http.StatusNoContent)
 	})
 
+	// Dernier email envoyé à une adresse (liens de confirmation F18).
+	router.GET("/fake-mail/dernier", func(c *gin.Context) {
+		m, ok := mailbox.last(c.Query("a"))
+		if !ok {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.JSON(http.StatusOK, m)
+	})
+
 	front := os.Getenv("FRONT_DIR")
 	router.NoRoute(func(c *gin.Context) {
 		// Même politique que frontend/nginx.conf (le front a la sienne, l'API garde default-src 'none').
@@ -114,11 +127,39 @@ func run() error {
 		c.File(filepath.Join(front, "index.html")) // routes de la SPA
 	})
 
-	addr := os.Getenv("HTTP_ADDR")
-	if addr == "" {
-		addr = "127.0.0.1:8090"
-	}
+	addr := listenAddr()
 	logger.Warn("serveur e2e prêt", slog.String("addr", addr))
 	srv := &http.Server{Addr: addr, Handler: router, ReadHeaderTimeout: 5 * time.Second}
 	return srv.ListenAndServe()
+}
+
+func listenAddr() string {
+	if addr := os.Getenv("HTTP_ADDR"); addr != "" {
+		return addr
+	}
+	return "127.0.0.1:8090"
+}
+
+// outbox garde les emails au lieu de les envoyer.
+type outbox struct {
+	mu   sync.Mutex
+	sent []app.Email
+}
+
+func (o *outbox) Send(_ context.Context, m app.Email) error {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.sent = append(o.sent, m)
+	return nil
+}
+
+func (o *outbox) last(to string) (app.Email, bool) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	for i := len(o.sent) - 1; i >= 0; i-- {
+		if strings.EqualFold(o.sent[i].To, to) {
+			return o.sent[i], true
+		}
+	}
+	return app.Email{}, false
 }

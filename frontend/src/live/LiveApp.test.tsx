@@ -6,7 +6,7 @@ import { PackCard } from '../components/PackCard';
 import { AppStoreProvider, useApp } from '../store/AppStore';
 import { LiveRoutes } from './LiveApp';
 
-const me = { id: 'u1', pseudo: 'sami', email: null, github_login: 'sami', bio: 'ancienne bio', role: 'MEMBRE', score_reputation: 4, date_inscription: '2026-10-14T09:00:00Z' };
+const me = { id: 'u1', pseudo: 'sami', email: null, github_login: 'sami', github_lie: true, email_verifie: false, bio: 'ancienne bio', role: 'MEMBRE', score_reputation: 4, date_inscription: '2026-10-14T09:00:00Z' };
 const offer = {
   id: 'o1', titre: 'Pipeline CI', description: 'desc', prix_credits: 60, delai_jours: 3, statut: 'PUBLIEE', date_publication: '2026-10-14T09:00:00Z',
   jalons: [{ titre: 'J1', montant: 60 }],

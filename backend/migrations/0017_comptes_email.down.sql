@@ -1,0 +1,10 @@
+ALTER TABLE oauth_state DROP COLUMN id_utilisateur;
+DROP TABLE jeton_email;
+ALTER TABLE utilisateur DROP CONSTRAINT ck_utilisateur_mdp_email;
+ALTER TABLE utilisateur DROP CONSTRAINT ck_utilisateur_connexion;
+ALTER TABLE utilisateur DROP COLUMN email_verifie_le;
+ALTER TABLE utilisateur DROP COLUMN mot_de_passe_hash;
+DELETE FROM utilisateur WHERE github_id IS NULL;
+ALTER TABLE utilisateur ALTER COLUMN github_cree_le SET NOT NULL;
+ALTER TABLE utilisateur ALTER COLUMN github_login SET NOT NULL;
+ALTER TABLE utilisateur ALTER COLUMN github_id SET NOT NULL;

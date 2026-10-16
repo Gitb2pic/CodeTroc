@@ -116,3 +116,15 @@ type GitHubIssues interface {
 	UpdateIssue(ctx context.Context, repo RepoRef, number int, in IssueUpdate) error
 	Comment(ctx context.Context, repo RepoRef, number int, body string) error
 }
+
+// Email est un message texte envoyé à un membre (F18).
+type Email struct {
+	To      string
+	Subject string
+	Text    string
+}
+
+// Mailer envoie les emails de confirmation et de réinitialisation.
+type Mailer interface {
+	Send(ctx context.Context, m Email) error
+}

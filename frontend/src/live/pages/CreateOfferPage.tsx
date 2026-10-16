@@ -1,17 +1,20 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, call, type S } from '../../api/client';
+import { useSession } from '../../api/session';
 import { useResource } from '../../api/useResource';
 import { PageTitle, SegButtons } from '../../components/ui';
 import { Field, FormError, Loaded, small, useAction } from '../kit';
 import { LIVE_ROUTES as R } from '../routes';
+import { NeedsGitHub } from './EmailAuth';
 
 export function CreateOfferPage() {
+  const { user } = useSession();
   const packs = useResource(() => call(() => api.GET('/packs', { params: { query: { limit: 100 } } })), []);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 760 }}>
       <PageTitle title="Proposer une offre" sub="Choisis un pack standard, fixe ton prix et découpe-le en jalons." />
-      <Loaded r={packs} what="Les packs">{(p) => <OfferForm packs={p.items} />}</Loaded>
+      {user && !user.github_lie ? <NeedsGitHub what="proposer une offre" /> : <Loaded r={packs} what="Les packs">{(p) => <OfferForm packs={p.items} />}</Loaded>}
     </div>
   );
 }

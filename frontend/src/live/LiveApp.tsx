@@ -9,6 +9,7 @@ import { CatalogPage } from './pages/CatalogPage';
 import { CreateOfferPage } from './pages/CreateOfferPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DisputePage, DisputesPage } from './pages/DisputesPage';
+import { ConfirmEmailPage, ResetPasswordPage } from './pages/EmailAuth';
 import { ExchangePage } from './pages/ExchangePage';
 import { LoginPage } from './pages/LoginPage';
 import { MemberPage } from './pages/MemberPage';
@@ -45,6 +46,8 @@ export function LiveRoutes() {
     <SessionProvider>
       <Routes>
         <Route path={R.landing} element={<LoginPage />} />
+        <Route path={R.confirmEmail} element={<ConfirmEmailPage />} />
+        <Route path={R.resetPassword} element={<ResetPasswordPage />} />
         <Route element={<RequireSession />}>
           <Route element={<LiveLayout />}>
             <Route path={R.dash} element={<DashboardPage />} />

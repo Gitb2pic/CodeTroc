@@ -63,7 +63,8 @@ type Deps struct {
 	GitHub   GitHubAPI    // nil si la GitHub App n'est pas configurée
 	Issues   GitHubIssues // nil : synchronisation Scrum désactivée (F16)
 	Vault    Sealer       // nil si le coffre n'est pas configuré
-	AppURL   string       // URL publique du site, pour les liens des issues
+	AppURL   string       // URL publique du site, pour les liens des issues et des emails
+	Mailer   Mailer       // nil : inscription et connexion par email fermées (F18)
 	Settings Settings
 }
 
@@ -78,6 +79,7 @@ type Service struct {
 	vault    Sealer
 	appURL   string
 	settings Settings
+	mailer   Mailer
 }
 
 // New construit le service.
@@ -87,7 +89,7 @@ func New(d Deps) *Service {
 		now = time.Now
 	}
 	return &Service{db: d.DB, now: func() time.Time { return now().UTC() }, tokens: d.Tokens, oauth: d.OAuth, github: d.GitHub, issues: d.Issues, vault: d.Vault,
-		appURL: strings.TrimRight(d.AppURL, "/"), settings: d.Settings}
+		appURL: strings.TrimRight(d.AppURL, "/"), settings: d.Settings, mailer: d.Mailer}
 }
 
 // tx exécute fn dans une transaction READ COMMITTED : validée si fn réussit,

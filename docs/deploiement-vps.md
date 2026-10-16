@@ -92,6 +92,14 @@ cp .env.prod.example .env && chmod 600 .env
 nano .env    # compléter ACME_EMAIL, GITHUB_CLIENT_ID, GITHUB_APP_ID
 ```
 
+**Email (facultatif).** L'inscription par email et mot de passe (F18) reste
+fermée tant que `SMTP_HOST` est vide dans `.env` : la page d'accueil ne propose
+alors que GitHub. Pour l'ouvrir, renseigner un relais SMTP authentifié
+(Brevo, Mailjet, Scaleway TEM, OVH…) : `SMTP_HOST`, `SMTP_PORT` (465 = TLS
+direct, sinon STARTTLS obligatoire), `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`
+(adresse d'un domaine autorisé chez le relais, avec SPF et DKIM configurés),
+puis `docker compose -f compose.yaml -f compose.prod.yaml up -d api`.
+
 > **Sauvegarde `secrets/vault_kek` hors du serveur** (gestionnaire de mots de
 > passe) : sans elle, les secrets déposés dans le coffre sont illisibles, même
 > avec une sauvegarde de la base.

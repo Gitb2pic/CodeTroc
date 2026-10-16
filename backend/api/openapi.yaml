@@ -86,6 +86,142 @@ paths:
         '429': { $ref: '#/components/responses/Problem' }
         '204':
           description: Session fermée.
+  /auth/methodes:
+    get:
+      operationId: getAuthMethods
+      summary: 'Modes de connexion ouverts sur ce serveur'
+      tags: [auth]
+      responses:
+        '429': { $ref: '#/components/responses/Problem' }
+        '200':
+          description: GitHub et/ou email (l'email exige un serveur SMTP configuré).
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [github, email]
+                properties:
+                  github: { type: boolean }
+                  email: { type: boolean }
+  /auth/inscription:
+    post:
+      operationId: registerWithEmail
+      summary: 'Créer un compte par email et mot de passe (F18)'
+      description: |
+        Envoie un lien de confirmation (48 h). La réponse est la même si
+        l'adresse est déjà inscrite : son titulaire reçoit alors un email
+        « compte existant ». Le bonus de bienvenue est versé à la confirmation.
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, mot_de_passe]
+              properties:
+                email: { type: string, maxLength: 254 }
+                mot_de_passe: { type: string, minLength: 10, maxLength: 128 }
+                pseudo: { type: string, description: 'Facultatif : déduit de l''adresse sinon.' }
+      responses:
+        '202': { description: 'Demande prise en compte ; un email est envoyé.' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /auth/connexion:
+    post:
+      operationId: loginWithPassword
+      summary: 'Se connecter par email et mot de passe'
+      description: 'Pose le cookie ct_refresh. 401 identifiants-invalides sans distinguer l''adresse inconnue ; 403 email-non-confirme.'
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, mot_de_passe]
+              properties:
+                email: { type: string }
+                mot_de_passe: { type: string }
+      responses:
+        '200':
+          description: Session ouverte.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccessToken' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /auth/email/confirmer:
+    post:
+      operationId: confirmEmail
+      summary: 'Confirmer son adresse avec le jeton reçu par email'
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmailToken' }
+      responses:
+        '204': { description: 'Adresse confirmée ; bonus de bienvenue versé.' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+  /auth/email/renvoyer:
+    post:
+      operationId: resendConfirmation
+      summary: 'Renvoyer le lien de confirmation (réponse identique si l''adresse est inconnue)'
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmailAddress' }
+      responses:
+        '202': { description: 'Demande prise en compte.' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /auth/mot-de-passe/oubli:
+    post:
+      operationId: requestPasswordReset
+      summary: 'Recevoir un lien de réinitialisation (1 h ; réponse identique si l''adresse est inconnue)'
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmailAddress' }
+      responses:
+        '202': { description: 'Demande prise en compte.' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /auth/mot-de-passe/reinitialiser:
+    post:
+      operationId: resetPassword
+      summary: 'Choisir un nouveau mot de passe ; ferme toutes les sessions du compte'
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [jeton, mot_de_passe]
+              properties:
+                jeton: { type: string }
+                mot_de_passe: { type: string, minLength: 10, maxLength: 128 }
+      responses:
+        '204': { description: 'Mot de passe changé.' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
   /me:
     get:
       operationId: getMe
@@ -133,6 +269,30 @@ paths:
         '400': { $ref: '#/components/responses/Problem' }
         '401': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
+  /me/github/lier:
+    post:
+      operationId: linkGitHub
+      summary: 'Lier un compte GitHub au compte connecté'
+      description: |
+        Renvoie l'URL d'autorisation GitHub et pose le cookie ct_oauth_state ;
+        le retour passe par /auth/github/callback (409 github-deja-lie si ce
+        compte GitHub appartient à un autre membre).
+      tags: [profil]
+      security: [{ bearer: [] }]
+      responses:
+        '200':
+          description: URL vers laquelle naviguer.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [url]
+                properties:
+                  url: { type: string }
+        '401': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
   /me/competences:
     put:
       operationId: setMySkills
@@ -313,6 +473,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/OfferInput' }
       responses:
+        '403': { $ref: '#/components/responses/Problem' }
         '201':
           description: Offre publiée.
           content:
@@ -454,6 +615,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/ApplicationInput' }
       responses:
+        '403': { $ref: '#/components/responses/Problem' }
         '201':
           description: Candidature déposée.
           content:
@@ -2121,12 +2283,14 @@ components:
     AdminUser:
       type: object
       additionalProperties: false
-      required: [id, pseudo, github_login, role, score_reputation, date_inscription, email, bio, statut]
+      required: [id, pseudo, github_login, github_lie, email_verifie, role, score_reputation, date_inscription, email, bio, statut]
       properties:
         id: { type: string, format: uuid }
         pseudo: { type: string }
         email: { type: string, nullable: true }
         github_login: { type: string }
+        github_lie: { type: boolean }
+        email_verifie: { type: boolean }
         bio: { type: string, nullable: true }
         role: { type: string, enum: [MEMBRE, ARBITRE, ADMIN] }
         score_reputation: { type: number }
@@ -2135,16 +2299,30 @@ components:
     Me:
       type: object
       additionalProperties: false
-      required: [id, pseudo, github_login, role, score_reputation, date_inscription, email, bio]
+      required: [id, pseudo, github_login, github_lie, email_verifie, role, score_reputation, date_inscription, email, bio]
       properties:
         id: { type: string, format: uuid }
         pseudo: { type: string }
         email: { type: string, nullable: true }
-        github_login: { type: string }
+        github_login: { type: string, description: 'Vide si aucun compte GitHub n''est lié.' }
+        github_lie: { type: boolean, description: 'Compte GitHub lié : requis pour proposer une offre ou candidater (F18).' }
+        email_verifie: { type: boolean, description: 'Adresse confirmée par lien (comptes email).' }
         bio: { type: string, nullable: true }
         role: { type: string, enum: [MEMBRE, ARBITRE, ADMIN] }
         score_reputation: { type: number }
         date_inscription: { type: string, format: date-time }
+    EmailToken:
+      type: object
+      additionalProperties: false
+      required: [jeton]
+      properties:
+        jeton: { type: string }
+    EmailAddress:
+      type: object
+      additionalProperties: false
+      required: [email]
+      properties:
+        email: { type: string }
     Status:
       type: object
       additionalProperties: false

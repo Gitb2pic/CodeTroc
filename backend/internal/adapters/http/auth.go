@@ -26,18 +26,20 @@ type authHandlers struct {
 }
 
 type userJSON struct {
-	ID          string    `json:"id"`
-	Pseudo      string    `json:"pseudo"`
-	Email       *string   `json:"email"`
-	GitHubLogin string    `json:"github_login"`
-	Bio         *string   `json:"bio"`
-	Role        app.Role  `json:"role"`
-	Reputation  float64   `json:"score_reputation"`
-	JoinedAt    time.Time `json:"date_inscription"`
+	ID            string    `json:"id"`
+	Pseudo        string    `json:"pseudo"`
+	Email         *string   `json:"email"`
+	GitHubLogin   string    `json:"github_login"`
+	GitHubLinked  bool      `json:"github_lie"`
+	EmailVerified bool      `json:"email_verifie"`
+	Bio           *string   `json:"bio"`
+	Role          app.Role  `json:"role"`
+	Reputation    float64   `json:"score_reputation"`
+	JoinedAt      time.Time `json:"date_inscription"`
 }
 
 func toUserJSON(u app.User) userJSON {
-	return userJSON{ID: u.ID.String(), Pseudo: u.Pseudo, Email: u.Email, GitHubLogin: u.GitHubLogin, Bio: u.Bio,
+	return userJSON{ID: u.ID.String(), Pseudo: u.Pseudo, Email: u.Email, GitHubLogin: u.GitHubLogin, GitHubLinked: u.HasGitHub, EmailVerified: u.EmailVerified, Bio: u.Bio,
 		Role: u.Role, Reputation: u.Reputation, JoinedAt: u.JoinedAt}
 }
 

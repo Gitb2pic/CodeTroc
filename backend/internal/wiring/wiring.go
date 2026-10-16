@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	ghadapter "github.com/gitb2pic/codetroc/backend/internal/adapters/github"
+	"github.com/gitb2pic/codetroc/backend/internal/adapters/mail"
 	"github.com/gitb2pic/codetroc/backend/internal/adapters/vault"
 	"github.com/gitb2pic/codetroc/backend/internal/app"
 	"github.com/gitb2pic/codetroc/backend/internal/platform/config"
@@ -51,6 +52,16 @@ func Service(cfg config.Config, pool *pgxpool.Pool, logger *slog.Logger) (*app.S
 		deps.Vault = v
 	} else {
 		logger.Warn("coffre non configuré (VAULT_KEK absent) : partage de secrets désactivé")
+	}
+	switch {
+	case cfg.SMTPEnabled():
+		deps.Mailer = mail.SMTP{Host: cfg.SMTPHost, Port: cfg.SMTPPort, User: cfg.SMTPUser, Password: cfg.SMTPPassword, From: cfg.SMTPFrom}
+	case !cfg.IsProduction():
+		// Développement : les liens de confirmation s'affichent dans le journal.
+		deps.Mailer = mail.Log{Logger: logger}
+		logger.Warn("SMTP non configuré : emails écrits dans le journal (développement)")
+	default:
+		logger.Warn("SMTP non configuré (SMTP_HOST absent) : inscription par email fermée")
 	}
 	return app.New(deps), nil
 }

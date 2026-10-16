@@ -106,6 +106,133 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/methodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Modes de connexion ouverts sur ce serveur */
+        get: operations["getAuthMethods"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/inscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Créer un compte par email et mot de passe (F18)
+         * @description Envoie un lien de confirmation (48 h). La réponse est la même si
+         *     l'adresse est déjà inscrite : son titulaire reçoit alors un email
+         *     « compte existant ». Le bonus de bienvenue est versé à la confirmation.
+         */
+        post: operations["registerWithEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/connexion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Se connecter par email et mot de passe
+         * @description Pose le cookie ct_refresh. 401 identifiants-invalides sans distinguer l'adresse inconnue ; 403 email-non-confirme.
+         */
+        post: operations["loginWithPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/email/confirmer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirmer son adresse avec le jeton reçu par email */
+        post: operations["confirmEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/email/renvoyer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Renvoyer le lien de confirmation (réponse identique si l'adresse est inconnue) */
+        post: operations["resendConfirmation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mot-de-passe/oubli": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Recevoir un lien de réinitialisation (1 h ; réponse identique si l'adresse est inconnue) */
+        post: operations["requestPasswordReset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mot-de-passe/reinitialiser": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Choisir un nouveau mot de passe ; ferme toutes les sessions du compte */
+        post: operations["resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -123,6 +250,28 @@ export interface paths {
         head?: never;
         /** Modifier son pseudo ou sa bio (bio vide = effacée) */
         patch: operations["updateMe"];
+        trace?: never;
+    };
+    "/me/github/lier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Lier un compte GitHub au compte connecté
+         * @description Renvoie l'URL d'autorisation GitHub et pose le cookie ct_oauth_state ;
+         *     le retour passe par /auth/github/callback (409 github-deja-lie si ce
+         *     compte GitHub appartient à un autre membre).
+         */
+        post: operations["linkGitHub"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/me/competences": {
@@ -1619,6 +1768,8 @@ export interface components {
             pseudo: string;
             email: string | null;
             github_login: string;
+            github_lie: boolean;
+            email_verifie: boolean;
             bio: string | null;
             /** @enum {string} */
             role: "MEMBRE" | "ARBITRE" | "ADMIN";
@@ -1633,13 +1784,24 @@ export interface components {
             id: string;
             pseudo: string;
             email: string | null;
+            /** @description Vide si aucun compte GitHub n'est lié. */
             github_login: string;
+            /** @description Compte GitHub lié : requis pour proposer une offre ou candidater (F18). */
+            github_lie: boolean;
+            /** @description Adresse confirmée par lien (comptes email). */
+            email_verifie: boolean;
             bio: string | null;
             /** @enum {string} */
             role: "MEMBRE" | "ARBITRE" | "ADMIN";
             score_reputation: number;
             /** Format: date-time */
             date_inscription: string;
+        };
+        EmailToken: {
+            jeton: string;
+        };
+        EmailAddress: {
+            email: string;
         };
         Status: {
             /** @enum {string} */
@@ -1807,6 +1969,193 @@ export interface operations {
             429: components["responses"]["Problem"];
         };
     };
+    getAuthMethods: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description GitHub et/ou email (l'email exige un serveur SMTP configuré). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        github: boolean;
+                        email: boolean;
+                    };
+                };
+            };
+            429: components["responses"]["Problem"];
+        };
+    };
+    registerWithEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                    mot_de_passe: string;
+                    /** @description Facultatif : déduit de l'adresse sinon. */
+                    pseudo?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Demande prise en compte ; un email est envoyé. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    loginWithPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                    mot_de_passe: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Session ouverte. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessToken"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    confirmEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailToken"];
+            };
+        };
+        responses: {
+            /** @description Adresse confirmée ; bonus de bienvenue versé. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+        };
+    };
+    resendConfirmation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailAddress"];
+            };
+        };
+        responses: {
+            /** @description Demande prise en compte. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    requestPasswordReset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailAddress"];
+            };
+        };
+        responses: {
+            /** @description Demande prise en compte. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    jeton: string;
+                    mot_de_passe: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Mot de passe changé. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+        };
+    };
     getMe: {
         parameters: {
             query?: never;
@@ -1876,6 +2225,31 @@ export interface operations {
             400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
+        };
+    };
+    linkGitHub: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description URL vers laquelle naviguer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        url: string;
+                    };
+                };
+            };
+            401: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     setMySkills: {
@@ -2131,6 +2505,7 @@ export interface operations {
             };
             400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
         };
     };
@@ -2343,6 +2718,7 @@ export interface operations {
             };
             400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
             422: components["responses"]["Problem"];

@@ -23,12 +23,15 @@ type User struct {
 	ID          uuid.UUID
 	Pseudo      string
 	Email       *string
-	GitHubLogin string
-	Bio         *string
-	Role        Role
-	Status      string
-	Reputation  float64
-	JoinedAt    time.Time
+	GitHubLogin string // vide pour un compte email sans GitHub lié (F18)
+	HasGitHub   bool
+	// EmailVerified : adresse confirmée par lien (comptes email, F18).
+	EmailVerified bool
+	Bio           *string
+	Role          Role
+	Status        string
+	Reputation    float64
+	JoinedAt      time.Time
 }
 
 // Session est le résultat d'une connexion ou d'un rafraîchissement.
@@ -52,11 +55,11 @@ var (
 	errRefreshReused = newErr(KindUnauthenticated, "jeton-reutilise", "Session révoquée", "Ce jeton a déjà servi : toutes les sessions liées ont été fermées.")
 )
 
-const userColumns = `id_utilisateur, pseudo, email, github_login, bio, role, statut_utilisateur, score_reputation::float8, date_inscription`
+const userColumns = `id_utilisateur, pseudo, email, COALESCE(github_login, ''), github_id IS NOT NULL, email_verifie_le IS NOT NULL, bio, role, statut_utilisateur, score_reputation::float8, date_inscription`
 
 func scanUser(row pgx.Row) (User, error) {
 	var u User
-	err := row.Scan(&u.ID, &u.Pseudo, &u.Email, &u.GitHubLogin, &u.Bio, &u.Role, &u.Status, &u.Reputation, &u.JoinedAt)
+	err := row.Scan(&u.ID, &u.Pseudo, &u.Email, &u.GitHubLogin, &u.HasGitHub, &u.EmailVerified, &u.Bio, &u.Role, &u.Status, &u.Reputation, &u.JoinedAt)
 	return u, err
 }
 
@@ -93,12 +96,15 @@ func (s *Service) CompleteLogin(ctx context.Context, stateParam, stateCookie, co
 	if stateParam == "" || subtle.ConstantTimeCompare([]byte(stateParam), []byte(stateCookie)) != 1 {
 		return Session{}, errOAuthState
 	}
-	tag, err := s.db.Exec(ctx, `DELETE FROM oauth_state WHERE hash = $1 AND expire_le >= $2`, token.HashOpaque(stateParam), s.now())
+	// Un state de liaison (F18) porte le membre qui l'a demandé.
+	var linkUser *uuid.UUID
+	err := s.db.QueryRow(ctx, `DELETE FROM oauth_state WHERE hash = $1 AND expire_le >= $2 RETURNING id_utilisateur`,
+		token.HashOpaque(stateParam), s.now()).Scan(&linkUser)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Session{}, errOAuthState
+	}
 	if err != nil {
 		return Session{}, err
-	}
-	if tag.RowsAffected() != 1 {
-		return Session{}, errOAuthState
 	}
 
 	id, err := s.oauth.Exchange(ctx, code)
@@ -109,6 +115,9 @@ func (s *Service) CompleteLogin(ctx context.Context, stateParam, stateCookie, co
 	}
 	if min := s.settings.MinGitHubAccountAge; min > 0 && s.now().Sub(id.CreatedAt) < min {
 		return Session{}, errTooRecent
+	}
+	if linkUser != nil {
+		return s.linkGitHub(ctx, *linkUser, id)
 	}
 
 	var sess Session

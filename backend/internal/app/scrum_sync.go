@@ -237,7 +237,7 @@ func (s *Service) sprintIssue(ctx context.Context, exID, sprintID uuid.UUID) (sc
 		SELECT sp.numero, j.ordre, j.titre_jalon, sp.objectif_sprint, sp.debut_prevu, sp.fin_prevue, j.echeance, j.montant_jalon,
 		       (SELECT count(*) FROM sprint s2 WHERE s2.id_jalon = sp.id_jalon AND s2.numero <= sp.numero AND s2.statut_sprint <> 'ANNULE')::int,
 		       (SELECT count(*) FROM sprint s2 WHERE s2.id_jalon = sp.id_jalon AND s2.statut_sprint <> 'ANNULE')::int,
-		       p.definition_of_done, sp.github_issue_no, j.github_milestone_no, u.github_login
+		       p.definition_of_done, sp.github_issue_no, j.github_milestone_no, COALESCE(u.github_login, '')
 		FROM sprint sp JOIN jalon j USING (id_jalon) JOIN projet_scrum p ON p.id_echange = sp.id_echange
 		JOIN echange e ON e.id_echange = sp.id_echange JOIN utilisateur u ON u.id_utilisateur = e.id_prestataire
 		WHERE sp.id_sprint = $1`, sprintID).

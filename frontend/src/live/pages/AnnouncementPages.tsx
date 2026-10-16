@@ -8,6 +8,7 @@ import type { Tone } from '../../domain/types';
 import { fmtDate, initials } from '../format';
 import { Field, FormError, Loaded, small, useAction } from '../kit';
 import { LIVE_ROUTES as R } from '../routes';
+import { NeedsGitHub } from './EmailAuth';
 
 // F17 — annonces : une personne qui a besoin d'aide publie sa demande,
 // des prestataires candidatent, elle en retient un.
@@ -190,7 +191,7 @@ function AnnouncementView({ a, reload }: { a: S['Announcement']; reload(): void 
             <Avatar ini={initials(a.auteur.pseudo)} size={32} fontSize={9} />
             <span style={{ flex: 1, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
               <span style={{ fontSize: 13, fontWeight: 500 }}>{a.auteur.pseudo}</span>
-              <span className="mono faint" style={{ fontSize: 11.5 }}>@{a.auteur.github_login}</span>
+              {a.auteur.github_login && <span className="mono faint" style={{ fontSize: 11.5 }}>@{a.auteur.github_login}</span>}
             </span>
           </Link>
         </aside>
@@ -262,6 +263,7 @@ function ApplicationSummary({ c }: { c: S['Application'] }) {
 
 /** Candidature de l'appelant : formulaire, ou état et retrait. */
 function MyApplication({ a, reload }: { a: S['Announcement']; reload(): void }) {
+  const { user } = useSession();
   const apps = useResource(() => call(() => api.GET('/annonces/{id}/candidatures', { params: { path: { id: a.id } } })), [a.id, a.ma_candidature]);
   return (
     <Loaded r={apps} what="Ta candidature">
@@ -270,6 +272,7 @@ function MyApplication({ a, reload }: { a: S['Announcement']; reload(): void }) 
         if (mine && (mine.statut !== 'RETIREE' || a.statut !== 'OUVERTE')) {
           return <OwnApplication a={a} c={mine} reload={() => { apps.reload(); reload(); }} />;
         }
+        if (user && !user.github_lie) return <NeedsGitHub what="candidater" />;
         return <ApplyForm a={a} reload={() => { apps.reload(); reload(); }} />;
       }}
     </Loaded>

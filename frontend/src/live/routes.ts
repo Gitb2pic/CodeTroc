@@ -15,4 +15,6 @@ export const LIVE_ROUTES = {
   member: (id: string) => `/membres/${id}`,
   profile: '/profil',
   admin: '/administration',
+  confirmEmail: '/confirmer-email',
+  resetPassword: '/reinitialiser-mot-de-passe',
 };

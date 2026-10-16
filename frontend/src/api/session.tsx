@@ -9,6 +9,8 @@ interface SessionState {
   /** Relit la session depuis le cookie (bac à sable, après une connexion simulée). */
   reload(): Promise<void>;
   setUser(u: S['Me']): void;
+  /** Ouvre la session reçue d'une connexion par email (F18). */
+  signIn(t: S['AccessToken']): void;
 }
 
 const Ctx = createContext<SessionState | null>(null);
@@ -21,6 +23,8 @@ const OUTCOMES: Record<string, string> = {
   'github-refuse': "GitHub a refusé la connexion (configuration de l'OAuth App côté serveur).",
   'github-non-configure': "La connexion GitHub n'est pas configurée sur ce serveur.",
   'erreur-interne': 'Erreur du serveur pendant la connexion, réessaie plus tard.',
+  'github-deja-lie': 'Ce compte GitHub est déjà associé à un autre membre CodeTroc.',
+  'github-deja-present': 'Ton compte est déjà lié à GitHub.',
 };
 
 /** Message à afficher après le retour de GitHub (?connexion=…), puis nettoyage de l'URL. */
@@ -69,6 +73,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       logout,
       reload,
       setUser: (u) => setUser(u),
+      signIn: (t) => {
+        setAccessToken(t.access_token);
+        setUser(t.user);
+        setStatus('authenticated');
+      },
     }),
     [status, user, logout, reload],
   );
