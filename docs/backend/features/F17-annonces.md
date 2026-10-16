@@ -1,15 +1,15 @@
 # F17 — Annonces : demandes d'aide
 
-> Statut : **implémentée (backend)** · Taille : M · Dépend de : F4, F6 · Prérequis de F16 pour le flux « annonce » · Écrans : Catalogue (onglet Annonces), Création d'annonce
+> Statut : **implémentée (backend)** · Taille : M · Dépend de : F4, F6 · Écrans : Catalogue (onglet Annonces), Création d'annonce
 
 Seul le prestataire publiait (offre) et le demandeur le sollicitait.
 L'annonce inverse le sens : **une personne qui a besoin d'aide** publie sa
 demande, des prestataires candidatent, elle choisit l'un d'eux, ce qui crée un
-**échange** (puis son projet Scrum, F16).
+**échange**.
 
 ## Modèle (migration `0015_annonces`)
 
-- **`annonce`** : titre, besoin, dépôt (`https://github.com/<owner>/<repo>`, même parseur anti-SSRF que F6), pack (fixe le type de preuve et la fourchette de prix), budget, délai (1 à 90 j), jalons souhaités (somme = budget, RG10), durée de sprint (7 ou 14 j, D20), expiration à 30 jours. Statuts : OUVERTE, POURVUE, RETIREE, EXPIREE.
+- **`annonce`** : titre, besoin, dépôt (`https://github.com/<owner>/<repo>`, même parseur anti-SSRF que F6), pack (fixe le type de preuve et la fourchette de prix), budget, délai (1 à 90 j), jalons souhaités (somme = budget, RG10), expiration à 30 jours. Statuts : OUVERTE, POURVUE, RETIREE, EXPIREE.
 - **`candidature`** : prix (dans la fourchette du pack), délai, jalons (somme = prix), message (≤ 2000). Statuts : EN_ATTENTE, ACCEPTEE, REFUSEE, RETIREE. Une seule candidature en attente par prestataire et par annonce (index unique partiel).
 - **`echange`** : `id_offre` devient facultatif, `id_annonce` apparaît, `CHECK` « exactement l'un des deux » ; `id_pack` est recopié dans l'échange (il porte le type de preuve quelle que soit l'origine). Index unique : une annonce produit au plus un échange.
 

@@ -94,11 +94,6 @@ export function notificationText(n: S['Notification']): { icon: string; text: st
     CANDIDATURE_RECUE: ['hand', `Nouvelle candidature à ton annonce « ${String(d.annonce ?? '')} »`, 'ac'],
     CANDIDATURE_ACCEPTEE: ['circle-check', `Ta candidature est retenue : « ${String(d.annonce ?? '')} »`, 'ok'],
     CANDIDATURE_REFUSEE: ['circle-x', `Candidature non retenue : « ${String(d.annonce ?? '')} »`, 'mute'],
-    SPRINT_TERMINE: ['list-checks', `Sprint ${String(d.sprint ?? '')} terminé : ${String(d.points_faits ?? 0)}/${String(d.points_prevus ?? 0)} points, place à la rétro${pack}`, 'ac'],
-    JALON_A_RISQUE: ['triangle-alert', `Jalon${jalon} à risque de retard${pack}`, 'wait'],
-    JALON_EN_RETARD: ['timer', `Échéance dépassée pour le jalon${jalon}${pack}`, 'fail'],
-    AVENANT_PROPOSE: ['history', `Nouvelles échéances proposées${pack}`, 'wait'],
-    AVENANT_DECIDE: ['history', `Avenant de planning ${d.statut === 'ACCEPTE' ? 'accepté' : d.statut === 'RETIRE' ? 'retiré' : 'refusé'}${pack}`, 'mute'],
   };
   const [icon, text, tone] = map[n.type] ?? ['bell', n.type, 'mute'];
   return { icon, text, tone };

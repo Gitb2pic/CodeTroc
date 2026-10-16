@@ -13,7 +13,7 @@ func (e *apiEnv) publishAnnouncement(m member, budget int64) announcementJSON {
 	half := budget / 2
 	w := e.do(call{method: http.MethodPost, path: "/api/v1/annonces", token: m.Token, body: map[string]any{
 		"id_pack": e.pipelinePackID(), "titre": "Pipeline CI pour notre API", "besoin": "Lint, tests et image Docker.",
-		"depot_url": "https://github.com/acme/shop-api", "budget_credits": budget, "delai_jours": 20, "duree_sprint_jours": 14,
+		"depot_url": "https://github.com/acme/shop-api", "budget_credits": budget, "delai_jours": 20,
 		"jalons": []map[string]any{{"titre": "CI", "montant": half}, {"titre": "Docker", "montant": budget - half}},
 	}})
 	require.Equal(e.t, http.StatusCreated, w.Code, w.Body.String())
@@ -35,7 +35,6 @@ func TestAnnouncementsAPI_Lifecycle(t *testing.T) {
 	sami, lea, noe, tiers := e.login("sami"), e.login("lea"), e.login("noe"), e.login("tiers")
 	e.fund(sami, 310)
 	ann := e.publishAnnouncement(sami, 120)
-	assert.Equal(t, 14, ann.SprintDays)
 	path := "/api/v1/annonces/" + ann.ID.String()
 
 	// Liste publique, sans authentification.

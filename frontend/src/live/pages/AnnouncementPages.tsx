@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, call, idem, type S } from '../../api/client';
 import { useSession } from '../../api/session';
 import { useResource } from '../../api/useResource';
-import { Avatar, EmptyState, Icon, PageTitle, Pill, SegButtons, Tag } from '../../components/ui';
+import { Avatar, EmptyState, Icon, PageTitle, Pill, Tag } from '../../components/ui';
 import type { Tone } from '../../domain/types';
 import { fmtDate, initials } from '../format';
 import { Field, FormError, Loaded, small, useAction } from '../kit';
@@ -27,7 +27,6 @@ const APPLICATION_STATUS: Record<S['Application']['statut'], [string, Tone]> = {
   RETIREE: ['Retirée', 'mute'],
 };
 
-const SPRINTS: [7 | 14, string][] = [[7, 'Sprints de 7 j'], [14, 'Sprints de 14 j']];
 
 /** Éditeur de jalons : la somme des montants fait le prix (RG10). */
 export function MilestonesEditor({ value, onChange, max = 10 }: { value: S['Milestone'][]; onChange(ms: S['Milestone'][]): void; max?: number }) {
@@ -90,7 +89,6 @@ function AnnouncementForm({ packs }: { packs: S['Pack'][] }) {
   const [need, setNeed] = useState('');
   const [repo, setRepo] = useState('https://github.com/');
   const [days, setDays] = useState(14);
-  const [sprint, setSprint] = useState<7 | 14>(7);
   const [milestones, setMilestones] = useState<S['Milestone'][]>([{ titre: '', montant: 0 }]);
   const act = useAction();
   const budget = sum(milestones);
@@ -99,7 +97,7 @@ function AnnouncementForm({ packs }: { packs: S['Pack'][] }) {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const a = await act.run(
-      () => call(() => api.POST('/annonces', { body: { id_pack: packId, titre: title.trim(), besoin: need.trim(), depot_url: repo.trim(), budget_credits: budget, delai_jours: days, duree_sprint_jours: sprint, jalons: milestones.map((m) => ({ titre: m.titre.trim(), montant: m.montant })) } })),
+      () => call(() => api.POST('/annonces', { body: { id_pack: packId, titre: title.trim(), besoin: need.trim(), depot_url: repo.trim(), budget_credits: budget, delai_jours: days, jalons: milestones.map((m) => ({ titre: m.titre.trim(), montant: m.montant })) } })),
       'Annonce publiée',
     );
     if (a) navigate(R.announcement(a.id));
@@ -115,13 +113,7 @@ function AnnouncementForm({ packs }: { packs: S['Pack'][] }) {
       <Field label="Titre"><input className="field" required minLength={5} maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Pipeline CI pour notre API Node" /></Field>
       <Field label="Ton besoin" hint="Contexte, contraintes, ce qui est attendu"><textarea className="field" required rows={5} maxLength={4000} value={need} onChange={(e) => setNeed(e.target.value)} /></Field>
       <Field label="Dépôt GitHub" hint="Le travail et les preuves se font sur ce dépôt"><input className="field" required value={repo} onChange={(e) => setRepo(e.target.value)} /></Field>
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <Field label="Délai (jours)"><input className="field" type="number" min={1} max={90} value={days} onChange={(e) => setDays(+e.target.value)} style={{ width: 120 }} /></Field>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
-          <span style={{ fontWeight: 500 }}>Durée des sprints</span>
-          <SegButtons options={SPRINTS} value={sprint} onChange={setSprint} />
-        </div>
-      </div>
+      <Field label="Délai (jours)"><input className="field" type="number" min={1} max={90} value={days} onChange={(e) => setDays(+e.target.value)} style={{ width: 120 }} /></Field>
       <MilestonesEditor value={milestones} onChange={setMilestones} />
       <span className="mono" style={{ fontSize: 13, color: inRange ? 'var(--ac-tx)' : 'var(--wait)' }}>
         Budget : {budget} cr{pack && !inRange ? ` (attendu entre ${pack.prix_min} et ${pack.prix_max})` : ''} · rien n'est bloqué avant que tu retiennes un prestataire
@@ -178,7 +170,6 @@ function AnnouncementView({ a, reload }: { a: S['Announcement']; reload(): void 
             <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: '1fr auto', gap: '6px 8px', fontSize: 13 }}>
               <dt className="muted">Budget</dt><dd className="mono" style={{ margin: 0 }}>{a.budget_credits} cr</dd>
               <dt className="muted">Délai</dt><dd className="mono" style={{ margin: 0 }}>{a.delai_jours} j</dd>
-              <dt className="muted">Sprints</dt><dd className="mono" style={{ margin: 0 }}>{a.duree_sprint_jours} j</dd>
               <dt className="muted">Candidatures</dt><dd className="mono" style={{ margin: 0 }}>{a.candidatures_en_attente}</dd>
               <dt className="muted">Expire le</dt><dd className="mono" style={{ margin: 0 }}>{fmtDate(a.date_expiration)}</dd>
             </dl>

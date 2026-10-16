@@ -60,7 +60,6 @@ func TestAnnouncement_PublishAndList(t *testing.T) {
 	sc := newAnnScenario(t, e)
 
 	assert.Equal(t, AnnOpen, sc.ann.Status)
-	assert.Equal(t, 7, sc.ann.SprintDays, "7 jours par défaut (D20)")
 	assert.Equal(t, sc.ann.PublishedAt.Add(AnnouncementTTL), sc.ann.ExpiresAt)
 	assert.Equal(t, "acme", sc.ann.Repo.Owner)
 
@@ -81,11 +80,6 @@ func TestAnnouncement_PublishAndList(t *testing.T) {
 	bad.RepoURL = "http://169.254.169.254/latest"
 	_, err = e.svc.PublishAnnouncement(ctx, sc.sami, bad)
 	requireKind(t, err, KindInvalid, "depot-invalide")
-
-	bad = annInput(t, e)
-	bad.SprintDays = 10
-	_, err = e.svc.PublishAnnouncement(ctx, sc.sami, bad)
-	requireKind(t, err, KindInvalid, "")
 }
 
 func TestAnnouncement_ApplyRules(t *testing.T) {

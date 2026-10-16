@@ -1,14 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, call, idem, type S } from '../../api/client';
 import { useSession } from '../../api/session';
 import { useResource } from '../../api/useResource';
-import { Avatar, EscrowBar, Icon, Pill, SegButtons } from '../../components/ui';
+import { Avatar, EscrowBar, Icon, Pill } from '../../components/ui';
 import { percent } from '../../domain/logic';
 import { EXCHANGE_STATUS, fmtDate, fmtTime, initials, MILESTONE_STATUS, shortId } from '../format';
 import { Field, FormError, Loaded, small, useAction } from '../kit';
 import { LIVE_ROUTES as R } from '../routes';
-import { ScrumPanel, type ScrumTab } from './ScrumPanel';
 import { VaultCard } from './VaultCard';
 
 const POLL_MS = 20_000;
@@ -35,12 +34,6 @@ function ExchangeView({ x, reload }: { x: S['Exchange']; reload(): void }) {
   const yourTurn = x.a_qui_de_jouer === role;
   const total = x.montant_total;
   const current = x.jalons.find((m) => m.statut === 'EN_COURS' || m.statut === 'LIVRE');
-  // F16 : le cadre Scrum existe dès l'acceptation.
-  const [params, setParams] = useSearchParams();
-  const hasScrum = x.date_acceptation !== null;
-  const raw = params.get('onglet');
-  const tab: 'suivi' | ScrumTab = hasScrum && (raw === 'tableau' || raw === 'gantt' || raw === 'retro') ? raw : 'suivi';
-  const setTab = (t: 'suivi' | ScrumTab) => setParams(t === 'suivi' ? {} : { onglet: t }, { replace: true });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -57,13 +50,6 @@ function ExchangeView({ x, reload }: { x: S['Exchange']; reload(): void }) {
 
       <NextStep x={x} role={role} yourTurn={yourTurn} reload={reload} />
 
-      {hasScrum && (
-        <nav aria-label="Vues de l'échange">
-          <SegButtons options={[['suivi', 'Suivi'], ['tableau', 'Tableau Scrum'], ['gantt', 'Gantt'], ['retro', 'Rétro']]} value={tab} onChange={setTab} />
-        </nav>
-      )}
-
-      {tab !== 'suivi' ? <ScrumPanel x={x} tab={tab} /> : (
       <div className="split split-340">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <section className="card" style={{ padding: 20 }}>
@@ -113,7 +99,6 @@ function ExchangeView({ x, reload }: { x: S['Exchange']; reload(): void }) {
           {x.statut === 'EN_COURS' && role !== 'ARBITRE' && <CancelButton x={x} me={me} reload={reload} />}
         </aside>
       </div>
-      )}
     </div>
   );
 }

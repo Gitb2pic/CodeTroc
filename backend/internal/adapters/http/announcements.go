@@ -22,7 +22,6 @@ type announcementJSON struct {
 	RepoURL      string              `json:"depot_url"`
 	Budget       int64               `json:"budget_credits"`
 	Days         int                 `json:"delai_jours"`
-	SprintDays   int                 `json:"duree_sprint_jours"`
 	Milestones   []catalog.Milestone `json:"jalons"`
 	Status       string              `json:"statut"`
 	PublishedAt  time.Time           `json:"date_publication"`
@@ -43,7 +42,7 @@ type offerPackJSON struct {
 
 func toAnnouncementJSON(v app.AnnouncementView) announcementJSON {
 	return announcementJSON{ID: v.ID, Title: v.Title, Need: v.Need, RepoURL: v.Repo.URL(), Budget: v.Budget, Days: v.Days,
-		SprintDays: v.SprintDays, Milestones: v.Milestones, Status: v.Status, PublishedAt: v.PublishedAt, ExpiresAt: v.ExpiresAt,
+		Milestones: v.Milestones, Status: v.Status, PublishedAt: v.PublishedAt, ExpiresAt: v.ExpiresAt,
 		Pack:   offerPackJSON{ID: v.Pack.ID, Title: v.Pack.Title, ProofType: v.Pack.ProofType, Skills: v.Pack.Skills},
 		Author: memberSummaryJSON(v.Author), Applications: v.Applications, MyApp: v.MyApp, ExchangeID: v.ExchangeID}
 }
@@ -74,7 +73,6 @@ func (h announcementHandlers) create(c *gin.Context) {
 		RepoURL    string              `json:"depot_url"`
 		Budget     int64               `json:"budget_credits"`
 		Days       int                 `json:"delai_jours"`
-		SprintDays int                 `json:"duree_sprint_jours"`
 		Milestones []catalog.Milestone `json:"jalons"`
 	}
 	if !bindJSON(c, &b) {

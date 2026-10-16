@@ -60,7 +60,6 @@ type AnnouncementInput struct {
 	RepoURL    string
 	Budget     int64
 	Days       int
-	SprintDays int // 7 par défaut
 	Milestones []catalog.Milestone
 }
 
@@ -72,7 +71,6 @@ type AnnouncementView struct {
 	Repo         exchange.Repo
 	Budget       int64
 	Days         int
-	SprintDays   int
 	Milestones   []catalog.Milestone
 	Status       string
 	PublishedAt  time.Time
@@ -125,10 +123,7 @@ func (s *Service) PublishAnnouncement(ctx context.Context, a Actor, in Announcem
 	if err != nil {
 		return AnnouncementView{}, err
 	}
-	if in.SprintDays == 0 {
-		in.SprintDays = catalog.SprintWeek
-	}
-	ann := catalog.Announcement{Title: in.Title, Need: in.Need, Budget: in.Budget, Days: in.Days, SprintDays: in.SprintDays, Milestones: in.Milestones}
+	ann := catalog.Announcement{Title: in.Title, Need: in.Need, Budget: in.Budget, Days: in.Days, Milestones: in.Milestones}
 	if err := ann.Validate(catalog.Pack{MinPrice: pack.MinPrice, MaxPrice: pack.MaxPrice}); err != nil {
 		return AnnouncementView{}, fromValidation(err)
 	}
@@ -144,9 +139,9 @@ func (s *Service) PublishAnnouncement(ctx context.Context, a Actor, in Announcem
 	now := s.now()
 	if err := s.db.QueryRow(ctx, `
 		INSERT INTO annonce (titre_annonce, besoin, depot_owner, depot_nom, budget_credits, delai_jours, jalons_souhaites,
-		                     duree_sprint_jours, date_publication, date_expiration, id_auteur, id_pack)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id_annonce`,
-		in.Title, in.Need, repo.Owner, repo.Name, in.Budget, in.Days, ms, in.SprintDays, now, now.Add(AnnouncementTTL), a.ID, in.PackID).Scan(&id); err != nil {
+		                     date_publication, date_expiration, id_auteur, id_pack)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id_annonce`,
+		in.Title, in.Need, repo.Owner, repo.Name, in.Budget, in.Days, ms, now, now.Add(AnnouncementTTL), a.ID, in.PackID).Scan(&id); err != nil {
 		return AnnouncementView{}, err
 	}
 	return s.GetAnnouncement(ctx, &a, id)
@@ -155,7 +150,7 @@ func (s *Service) PublishAnnouncement(ctx context.Context, a Actor, in Announcem
 // annSelect lit une annonce ; $1 est l'appelant (NULL si anonyme).
 const annSelect = `
 	SELECT a.id_annonce, a.titre_annonce, a.besoin, a.depot_owner, a.depot_nom, a.budget_credits, a.delai_jours,
-	       a.duree_sprint_jours, a.jalons_souhaites, a.statut_annonce, a.date_publication, a.date_expiration,
+	       a.jalons_souhaites, a.statut_annonce, a.date_publication, a.date_expiration,
 	       p.id_pack, p.titre_pack, p.type_preuve,
 	       COALESCE((SELECT array_agg(c.libelle_competence ORDER BY c.libelle_competence)
 	                 FROM requerir r JOIN competence c USING (id_competence) WHERE r.id_pack = p.id_pack), '{}'),
@@ -174,7 +169,7 @@ func scanAnnouncement(row pgx.Row) (AnnouncementView, error) {
 	var v AnnouncementView
 	var ms []byte
 	err := row.Scan(&v.ID, &v.Title, &v.Need, &v.Repo.Owner, &v.Repo.Name, &v.Budget, &v.Days,
-		&v.SprintDays, &ms, &v.Status, &v.PublishedAt, &v.ExpiresAt,
+		&ms, &v.Status, &v.PublishedAt, &v.ExpiresAt,
 		&v.Pack.ID, &v.Pack.Title, &v.Pack.ProofType, &v.Pack.Skills,
 		&v.Author.ID, &v.Author.Pseudo, &v.Author.GitHubLogin, &v.Author.Reputation, &v.Author.Deliveries,
 		&v.Applications, &v.MyApp, &v.ExchangeID)
@@ -491,16 +486,12 @@ func (s *Service) AcceptApplication(ctx context.Context, a Actor, annID, appID u
 		if err != nil {
 			return err
 		}
-		var sprintDays int
-		if err := tx.QueryRow(ctx, `SELECT duree_sprint_jours FROM annonce WHERE id_annonce = $1`, ann.ID).Scan(&sprintDays); err != nil {
-			return err
-		}
 		if err := tx.QueryRow(ctx, `
 			INSERT INTO echange (montant_total, depot_owner, depot_nom, besoin, delai_jours, date_creation,
-			                     id_demandeur, id_prestataire, id_annonce, id_pack, duree_sprint_jours)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id_echange`,
+			                     id_demandeur, id_prestataire, id_annonce, id_pack)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id_echange`,
 			cand.Price, ann.Repo.Owner, ann.Repo.Name, ann.Need, cand.Days, s.now(),
-			ann.Author, cand.Provider, ann.ID, ann.PackID, sprintDays).Scan(&exID); err != nil {
+			ann.Author, cand.Provider, ann.ID, ann.PackID).Scan(&exID); err != nil {
 			return err
 		}
 		for i, m := range cand.Milestones {

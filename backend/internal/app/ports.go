@@ -3,10 +3,7 @@ package app
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
-
-	"github.com/gitb2pic/codetroc/backend/internal/domain/scrum"
 )
 
 // GitHubIdentity est le compte GitHub d'une personne qui se connecte.
@@ -71,50 +68,6 @@ type Sealed struct {
 type Sealer interface {
 	Seal(plaintext, aad []byte) (Sealed, error)
 	Open(s Sealed, aad []byte) ([]byte, error)
-}
-
-// RepoRef désigne un dépôt par son identifiant GitHub (jamais par son seul
-// nom, R-S2) ; owner et name servent à trouver l'installation de l'App.
-type RepoRef struct {
-	ID          int64
-	Owner, Name string
-}
-
-// IssueInput décrit une issue à créer.
-type IssueInput struct {
-	Title     string
-	Body      string
-	Labels    []string
-	Milestone int    // 0 : aucun
-	Assignee  string // login GitHub, vide : personne
-}
-
-// IssueUpdate modifie une issue ; un champ vide reste inchangé.
-type IssueUpdate struct {
-	Title  string
-	Body   string
-	State  string // "open", "closed" ou ""
-	Labels []string
-}
-
-// ErrGitHubPermission signale une permission manquante (issues:write non accordée).
-var ErrGitHubPermission = errors.New("github : permission refusée à l'App")
-
-// RateLimitError signale un quota GitHub épuisé ; RetryAfter vient de l'en-tête Retry-After.
-type RateLimitError struct{ RetryAfter time.Duration }
-
-func (e *RateLimitError) Error() string {
-	return fmt.Sprintf("github : quota épuisé, réessayer dans %s", e.RetryAfter)
-}
-
-// GitHubIssues écrit labels, milestones et issues dans le dépôt d'un échange
-// (permission issues:write, D18). Jamais de contents:write.
-type GitHubIssues interface {
-	EnsureLabels(ctx context.Context, repo RepoRef, labels []scrum.Label) error
-	EnsureMilestone(ctx context.Context, repo RepoRef, title string, due time.Time) (int, error)
-	CreateIssue(ctx context.Context, repo RepoRef, in IssueInput) (int, error)
-	UpdateIssue(ctx context.Context, repo RepoRef, number int, in IssueUpdate) error
-	Comment(ctx context.Context, repo RepoRef, number int, body string) error
 }
 
 // Email est un message texte envoyé à un membre (F18).

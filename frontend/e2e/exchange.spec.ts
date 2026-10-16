@@ -101,11 +101,11 @@ test('un tiers ne voit pas un échange qui ne le concerne pas', async ({ browser
   await expect(admin.getByText('Cet échange introuvable.')).toBeVisible();
 });
 
-test('annonce, candidature, échange et cadre Scrum (F16, F17)', async ({ browser }) => {
+test('annonce, candidature et échange (F17)', async ({ browser }) => {
   const nina = await loginAs(browser, 'nina');
   const theo = await loginAs(browser, 'theo');
 
-  // Nina publie une demande d'aide à 50 cr, sprints de 7 jours.
+  // Nina publie une demande d'aide à 50 cr.
   await nina.getByRole('button', { name: 'Catalogue', exact: true }).click();
   await nina.getByRole('button', { name: "Demandes d'aide" }).click();
   await nina.getByRole('button', { name: 'Publier une annonce' }).first().click();
@@ -132,23 +132,5 @@ test('annonce, candidature, échange et cadre Scrum (F16, F17)', async ({ browse
   await nina.getByRole('button', { name: /Retenir \(50 cr bloqués\)/ }).click();
   await expect(nina.getByText('theo travaille sur « Connexion »')).toBeVisible();
 
-  // Tableau Scrum : Nina (PO) ajoute une story au sprint 1.
-  await nina.getByRole('button', { name: 'Tableau Scrum' }).click();
-  await nina.getByText('+ Nouvelle story').click();
-  await nina.getByLabel('Titre', { exact: true }).fill('Parcours de connexion GitHub');
-  await nina.getByLabel('Sprint', { exact: true }).selectOption({ label: 'Sprint 1' });
-  await nina.getByRole('button', { name: 'Ajouter', exact: true }).click();
-  await expect(nina.getByRole('region', { name: 'Colonne À faire' }).getByText('Parcours de connexion GitHub')).toBeVisible();
-
-  // Théo (équipe) estime et démarre la story.
-  await theo.goto(nina.url());
-  await theo.getByLabel('Points de « Parcours de connexion GitHub »').selectOption('5');
-  await theo.getByRole('button', { name: 'Passer « Parcours de connexion GitHub » en En cours' }).click();
-  await expect(theo.getByRole('region', { name: 'Colonne En cours' }).getByText('Parcours de connexion GitHub')).toBeVisible();
-  await shot(theo, '7-tableau-scrum');
-
-  // Gantt : jalon et sprints.
-  await theo.getByRole('button', { name: 'Gantt' }).click();
-  await expect(theo.getByRole('img', { name: 'Gantt de 1 jalons' })).toBeVisible();
-  await shot(theo, '8-gantt');
+  await shot(nina, '7-echange-annonce');
 });

@@ -2,12 +2,6 @@ package catalog
 
 import "fmt"
 
-// Durées de sprint permises (D20).
-const (
-	SprintWeek     = 7
-	SprintTwoWeeks = 14
-)
-
 // Announcement est la demande d'aide d'un membre (F17) : il décrit son
 // besoin, son budget et les jalons souhaités ; des prestataires candidatent.
 type Announcement struct {
@@ -15,7 +9,6 @@ type Announcement struct {
 	Need       string
 	Budget     int64
 	Days       int
-	SprintDays int
 	Milestones []Milestone
 }
 
@@ -44,7 +37,7 @@ func checkDays(v int) error {
 }
 
 // Validate vérifie une annonce sur un pack : budget dans la fourchette du
-// pack, délai, durée de sprint et jalons dont la somme égale le budget (RG10).
+// pack, délai et jalons dont la somme égale le budget (RG10).
 func (a Announcement) Validate(p Pack) error {
 	if err := checkText("titre", a.Title, 5, 120); err != nil {
 		return err
@@ -56,9 +49,6 @@ func (a Announcement) Validate(p Pack) error {
 		return err
 	}
 	if err := checkDays(a.Days); err != nil {
-		return err
-	}
-	if err := ValidateSprintDays(a.SprintDays); err != nil {
 		return err
 	}
 	return ValidateMilestones(a.Budget, a.Milestones)
@@ -76,12 +66,4 @@ func (c Application) Validate(p Pack) error {
 		return err
 	}
 	return ValidateMilestones(c.Price, c.Milestones)
-}
-
-// ValidateSprintDays : sprints de 7 ou 14 jours (D20).
-func ValidateSprintDays(d int) error {
-	if d != SprintWeek && d != SprintTwoWeeks {
-		return fieldErr("duree_sprint_jours", "7 ou 14 jours")
-	}
-	return nil
 }

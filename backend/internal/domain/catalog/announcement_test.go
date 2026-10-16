@@ -11,7 +11,7 @@ import (
 func validAnnouncement() Announcement {
 	return Announcement{
 		Title: "Pipeline CI pour notre API", Need: "Lint, tests et image Docker sur chaque PR.",
-		Budget: 120, Days: 20, SprintDays: 7,
+		Budget: 120, Days: 20,
 		Milestones: []Milestone{{Title: "CI de base", Amount: 60}, {Title: "Image Docker", Amount: 60}},
 	}
 }
@@ -30,7 +30,6 @@ func TestValidateAnnouncement(t *testing.T) {
 		"budget au-dessus":       {func(a *Announcement) { a.Budget = 161; a.Milestones = []Milestone{{Title: "x", Amount: 161}} }, "prix-hors-fourchette"},
 		"délai nul":              {func(a *Announcement) { a.Days = 0 }, "donnees-invalides"},
 		"délai au-delà de 90 j":  {func(a *Announcement) { a.Days = 91 }, "donnees-invalides"},
-		"sprint de 10 jours":     {func(a *Announcement) { a.SprintDays = 10 }, "donnees-invalides"},
 		"jalons ≠ budget (RG10)": {func(a *Announcement) { a.Milestones[1].Amount = 50 }, "jalons-incoherents"},
 		"sans jalon":             {func(a *Announcement) { a.Milestones = nil }, "donnees-invalides"},
 	}

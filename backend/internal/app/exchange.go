@@ -197,10 +197,7 @@ func (s *Service) setMilestoneStatus(ctx context.Context, tx pgx.Tx, id uuid.UUI
 	if err := recordTransition(ctx, tx, "JALON", id, string(from), string(to), by, reason, s.now()); err != nil {
 		return err
 	}
-	if err := s.notifyMilestone(ctx, tx, id, from, to, by); err != nil {
-		return err
-	}
-	return s.onMilestoneChanged(ctx, tx, id, to)
+	return s.notifyMilestone(ctx, tx, id, from, to, by)
 }
 
 // RequestExchange crée une demande d'échange au statut PROPOSE (UC06).
@@ -241,9 +238,9 @@ func (s *Service) RequestExchange(ctx context.Context, a Actor, req ExchangeRequ
 	var id uuid.UUID
 	err = s.tx(ctx, func(tx pgx.Tx) error {
 		if err := tx.QueryRow(ctx, `
-			INSERT INTO echange (montant_total, depot_owner, depot_nom, besoin, delai_jours, date_creation, id_demandeur, id_prestataire, id_offre, id_pack, duree_sprint_jours)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id_echange`,
-			offer.Price, repo.Owner, repo.Name, req.Need, offer.Days, s.now(), a.ID, offer.Provider.ID, offer.ID, offer.Pack.ID, offer.SprintDays).Scan(&id); err != nil {
+			INSERT INTO echange (montant_total, depot_owner, depot_nom, besoin, delai_jours, date_creation, id_demandeur, id_prestataire, id_offre, id_pack)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id_echange`,
+			offer.Price, repo.Owner, repo.Name, req.Need, offer.Days, s.now(), a.ID, offer.Provider.ID, offer.ID, offer.Pack.ID).Scan(&id); err != nil {
 			return err
 		}
 		for i, m := range milestones {
@@ -314,9 +311,6 @@ func (s *Service) startExchange(ctx context.Context, tx pgx.Tx, r *exRow, by uui
 		if _, err := tx.Exec(ctx, `UPDATE jalon SET echeance = $2 WHERE id_jalon = $1`, ms[i], d); err != nil {
 			return err
 		}
-	}
-	if err := s.createScrumProject(ctx, tx, *r); err != nil {
-		return err
 	}
 	return s.setMilestoneStatus(ctx, tx, ms[0], exchange.Pending, exchange.Active, &by, "")
 }

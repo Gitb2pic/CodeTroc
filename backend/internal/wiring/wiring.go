@@ -40,7 +40,6 @@ func Service(cfg config.Config, pool *pgxpool.Pool, logger *slog.Logger) (*app.S
 			return nil, err
 		}
 		deps.GitHub = gh
-		deps.Issues = gh // F16 : issues, labels et milestones (permission issues:write, D18)
 	} else {
 		logger.Warn("GitHub App non configurée : les preuves PR resteront en attente")
 	}

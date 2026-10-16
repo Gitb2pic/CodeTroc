@@ -65,15 +65,12 @@ GitHub → *Developer settings* → *GitHub Apps* → *New GitHub App* :
 | Homepage URL | `https://codetroc.labtools.tech` |
 | Webhook URL | `https://codetroc.labtools.tech/api/v1/webhooks/github` |
 | Webhook secret | une valeur aléatoire : `openssl rand -hex 32` |
-| Permissions (Repository) | **Pull requests : Read-only**, **Checks : Read-only**, **Metadata : Read-only**, **Issues : Read and write** (projet Scrum, F16) |
-| Événements | **Pull request**, **Check suite**, **Check run**, **Issues** |
+| Permissions (Repository) | **Pull requests : Read-only**, **Checks : Read-only**, **Metadata : Read-only** |
+| Événements | **Pull request**, **Check suite**, **Check run** |
 
 Crée l'App, note son **App ID**, puis génère et télécharge une **clé privée**
 (`.pem`). Les membres installent l'App sur les dépôts de leurs échanges : sans
-installation, les preuves restent « en attente ». Si l'App existait déjà sans
-**Issues : Read and write**, ajoute la permission puis fais-la accepter par
-chaque propriétaire de dépôt : en attendant, le Scrum fonctionne sur CodeTroc et
-affiche « permission manquante » au lieu de créer les issues.
+installation, les preuves restent « en attente ».
 
 ## 5. Secrets et configuration
 
