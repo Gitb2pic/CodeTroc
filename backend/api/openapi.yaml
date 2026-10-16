@@ -347,6 +347,182 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /annonces:
+    get:
+      operationId: listAnnouncements
+      summary: 'Annonces ouvertes (demandes d''aide), ou les miennes avec mes=true (F17)'
+      tags: [annonces]
+      parameters:
+        - { name: pack, in: query, schema: { type: string, format: uuid } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: mes, in: query, description: 'true : mes annonces, tous statuts (authentification requise)', schema: { type: boolean } }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Page d'annonces.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Announcement' } }
+                  next_cursor: { type: string, nullable: true }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: publishAnnouncement
+      summary: 'Publier une annonce : le budget doit être couvert par le solde disponible'
+      tags: [annonces]
+      security: [{ bearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AnnouncementInput' }
+      responses:
+        '201':
+          description: Annonce publiée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Announcement' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /annonces/{id}:
+    get:
+      operationId: getAnnouncement
+      summary: 'Détail d''une annonce ; fermée, elle n''est visible que de son auteur et de ses candidats'
+      tags: [annonces]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Annonce.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Announcement' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /annonces/{id}/retirer:
+    post:
+      operationId: withdrawAnnouncement
+      summary: 'Retirer son annonce ouverte ; les candidatures en attente sont refusées'
+      tags: [annonces]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Annonce retirée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Announcement' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /annonces/{id}/candidatures:
+    get:
+      operationId: listApplications
+      summary: 'Candidatures : toutes pour l''auteur, la sienne pour un prestataire'
+      tags: [annonces]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Candidatures, de la plus ancienne à la plus récente.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Application' } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: applyToAnnouncement
+      summary: 'Candidater : prix, délai et jalons proposés (somme = prix, RG10)'
+      tags: [annonces]
+      security: [{ bearer: [] }]
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ApplicationInput' }
+      responses:
+        '201':
+          description: Candidature déposée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Application' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /annonces/{id}/candidatures/{cid}/accepter:
+    post:
+      operationId: acceptApplication
+      summary: 'Retenir une candidature (auteur) : crée l''échange EN_COURS et bloque le séquestre'
+      tags: [annonces]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/Cid' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '201':
+          description: Échange créé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exchange' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /annonces/{id}/candidatures/{cid}/refuser:
+    post:
+      operationId: refuseApplication
+      summary: 'Refuser une candidature (auteur)'
+      tags: [annonces]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/Cid' }
+      responses:
+        '200':
+          description: Candidature refusée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Application' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /annonces/{id}/candidatures/{cid}/retirer:
+    post:
+      operationId: withdrawApplication
+      summary: 'Retirer sa candidature en attente'
+      tags: [annonces]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/Cid' }
+      responses:
+        '200':
+          description: Candidature retirée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Application' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
   /echanges:
     get:
       operationId: listMyExchanges
@@ -1119,6 +1295,11 @@ components:
       in: path
       required: true
       schema: { type: string, format: uuid }
+    Cid:
+      name: cid
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
     Limit:
       name: limit
       in: query
@@ -1259,7 +1440,7 @@ components:
       type: object
       additionalProperties: false
       required: [id, statut, montant_total, delai_jours, depot_url, besoin, date_creation, date_acceptation, date_cloture,
-                 annulation_demandee_par, demandeur, prestataire, offre, jalons, sequestre, a_qui_de_jouer]
+                 annulation_demandee_par, demandeur, prestataire, offre, id_annonce, jalons, sequestre, a_qui_de_jouer]
       properties:
         id: { type: string, format: uuid }
         statut: { $ref: '#/components/schemas/ExchangeStatus' }
@@ -1278,10 +1459,11 @@ components:
           additionalProperties: false
           required: [id, titre, pack, type_preuve]
           properties:
-            id: { type: string, format: uuid }
+            id: { type: string, format: uuid, nullable: true, description: Offre d'origine ; null pour un échange né d'une annonce (F17). }
             titre: { type: string }
             pack: { type: string }
             type_preuve: { $ref: '#/components/schemas/ProofType' }
+        id_annonce: { type: string, format: uuid, nullable: true, description: Annonce d'origine (F17) ; null pour un échange né d'une offre. }
         jalons: { type: array, items: { $ref: '#/components/schemas/ExchangeMilestone' } }
         sequestre:
           type: object
@@ -1408,6 +1590,73 @@ components:
             type_preuve: { $ref: '#/components/schemas/ProofType' }
             competences: { type: array, items: { type: string } }
         prestataire: { $ref: '#/components/schemas/MemberSummary' }
+    Announcement:
+      type: object
+      additionalProperties: false
+      required: [id, titre, besoin, depot_url, budget_credits, delai_jours, duree_sprint_jours, jalons, statut, date_publication,
+                 date_expiration, pack, auteur, candidatures_en_attente, ma_candidature, id_echange]
+      properties:
+        id: { type: string, format: uuid }
+        titre: { type: string }
+        besoin: { type: string }
+        depot_url: { type: string }
+        budget_credits: { type: integer }
+        delai_jours: { type: integer }
+        duree_sprint_jours: { type: integer, enum: [7, 14] }
+        jalons: { type: array, items: { $ref: '#/components/schemas/Milestone' } }
+        statut: { type: string, enum: [OUVERTE, POURVUE, RETIREE, EXPIREE] }
+        date_publication: { type: string, format: date-time }
+        date_expiration: { type: string, format: date-time }
+        pack:
+          type: object
+          additionalProperties: false
+          required: [id, titre, type_preuve, competences]
+          properties:
+            id: { type: string, format: uuid }
+            titre: { type: string }
+            type_preuve: { $ref: '#/components/schemas/ProofType' }
+            competences: { type: array, items: { type: string } }
+        auteur: { $ref: '#/components/schemas/MemberSummary' }
+        candidatures_en_attente: { type: integer }
+        ma_candidature: { type: string, format: uuid, nullable: true, description: Candidature en attente de l'appelant. }
+        id_echange: { type: string, format: uuid, nullable: true, description: Échange créé (annonce pourvue) ; visible de ses parties. }
+    AnnouncementInput:
+      type: object
+      additionalProperties: false
+      required: [id_pack, titre, besoin, depot_url, budget_credits, delai_jours, jalons]
+      properties:
+        id_pack: { type: string, format: uuid }
+        titre: { type: string, minLength: 5, maxLength: 120 }
+        besoin: { type: string, maxLength: 4000 }
+        depot_url: { type: string, example: 'https://github.com/acme/shop-api' }
+        budget_credits: { type: integer, minimum: 1 }
+        delai_jours: { type: integer, minimum: 1, maximum: 90 }
+        duree_sprint_jours: { type: integer, enum: [7, 14], default: 7 }
+        jalons: { type: array, minItems: 1, maxItems: 10, items: { $ref: '#/components/schemas/Milestone' } }
+    Application:
+      type: object
+      additionalProperties: false
+      required: [id, id_annonce, prix_credits, delai_jours, message, jalons, statut, date_candidature, date_decision, prestataire]
+      properties:
+        id: { type: string, format: uuid }
+        id_annonce: { type: string, format: uuid }
+        prix_credits: { type: integer }
+        delai_jours: { type: integer }
+        message: { type: string }
+        jalons: { type: array, items: { $ref: '#/components/schemas/Milestone' } }
+        statut: { type: string, enum: [EN_ATTENTE, ACCEPTEE, REFUSEE, RETIREE] }
+        date_candidature: { type: string, format: date-time }
+        date_decision: { type: string, format: date-time, nullable: true }
+        prestataire: { $ref: '#/components/schemas/MemberSummary' }
+    ApplicationInput:
+      type: object
+      additionalProperties: false
+      required: [prix_credits, delai_jours, jalons]
+      properties:
+        prix_credits: { type: integer, minimum: 1 }
+        delai_jours: { type: integer, minimum: 1, maximum: 90 }
+        message: { type: string, maxLength: 2000 }
+        jalons: { type: array, minItems: 1, maxItems: 10, items: { $ref: '#/components/schemas/Milestone' } }
     MemberSummary:
       type: object
       additionalProperties: false

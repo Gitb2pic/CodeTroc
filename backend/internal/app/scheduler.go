@@ -14,6 +14,7 @@ type JobReport struct {
 	TacitReleases    int
 	ProofsRechecked  int
 	SecretsExpired   int
+	AnnouncementsExp int
 	LedgerMismatches int
 	LedgerTotal      int64
 }
@@ -46,6 +47,9 @@ func (s *Service) RunScheduledJobs(ctx context.Context) (JobReport, error) {
 		return r, err
 	}
 	if r.SecretsExpired, err = s.ExpireSecrets(ctx); err != nil {
+		return r, err
+	}
+	if r.AnnouncementsExp, err = s.ExpireAnnouncements(ctx); err != nil {
 		return r, err
 	}
 	if err := s.purge(ctx); err != nil {

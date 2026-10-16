@@ -63,7 +63,7 @@ func (s *Service) notify(ctx context.Context, q querier, kind string, by *uuid.U
 			INSERT INTO notification (id_notification, id_utilisateur, type, id_echange, donnees, date_creation)
 			SELECT $6, $1, $2, $3, $4::jsonb || COALESCE((
 			         SELECT jsonb_build_object('pack', p.titre_pack)
-			         FROM echange e JOIN offre o USING (id_offre) JOIN pack p USING (id_pack)
+			         FROM echange e JOIN pack p USING (id_pack)
 			         WHERE e.id_echange = $3), '{}'::jsonb), $5`,
 			u, kind, exchangeID, data, s.now(), id); err != nil {
 			return err

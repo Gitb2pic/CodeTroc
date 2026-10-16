@@ -61,12 +61,14 @@ type EscrowSummary struct {
 	Refunded int64
 }
 
-// ExchangeOffer résume l'offre d'un échange.
+// ExchangeOffer résume l'origine d'un échange : une offre (F6) ou une
+// annonce (F17). Title est le titre de l'une ou de l'autre.
 type ExchangeOffer struct {
-	ID        uuid.UUID
-	Title     string
-	PackTitle string
-	ProofType catalog.ProofType
+	ID             *uuid.UUID // offre d'origine
+	AnnouncementID *uuid.UUID // annonce d'origine
+	Title          string
+	PackTitle      string
+	ProofType      catalog.ProofType
 }
 
 // ExchangeView est un échange tel qu'affiché dans l'espace d'échange.
@@ -107,7 +109,7 @@ func (r exRow) isParty(id uuid.UUID) bool { return id == r.Requester || id == r.
 func loadExchange(ctx context.Context, q querier, id uuid.UUID, forUpdate bool) (exRow, error) {
 	sql := `SELECT e.id_echange, e.id_demandeur, e.id_prestataire, e.statut_echange, e.montant_total, e.delai_jours,
 	               e.depot_owner, e.depot_nom, e.github_repo_id, e.date_acceptation, e.annulation_demandee_par, p.type_preuve
-	        FROM echange e JOIN offre o USING (id_offre) JOIN pack p USING (id_pack)
+	        FROM echange e JOIN pack p USING (id_pack)
 	        WHERE e.id_echange = $1`
 	if forUpdate {
 		sql += ` FOR UPDATE OF e`
@@ -236,9 +238,9 @@ func (s *Service) RequestExchange(ctx context.Context, a Actor, req ExchangeRequ
 	var id uuid.UUID
 	err = s.tx(ctx, func(tx pgx.Tx) error {
 		if err := tx.QueryRow(ctx, `
-			INSERT INTO echange (montant_total, depot_owner, depot_nom, besoin, delai_jours, date_creation, id_demandeur, id_prestataire, id_offre)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id_echange`,
-			offer.Price, repo.Owner, repo.Name, req.Need, offer.Days, s.now(), a.ID, offer.Provider.ID, offer.ID).Scan(&id); err != nil {
+			INSERT INTO echange (montant_total, depot_owner, depot_nom, besoin, delai_jours, date_creation, id_demandeur, id_prestataire, id_offre, id_pack)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id_echange`,
+			offer.Price, repo.Owner, repo.Name, req.Need, offer.Days, s.now(), a.ID, offer.Provider.ID, offer.ID, offer.Pack.ID).Scan(&id); err != nil {
 			return err
 		}
 		for i, m := range milestones {
@@ -269,41 +271,48 @@ func (s *Service) AcceptExchange(ctx context.Context, a Actor, id uuid.UUID) (Ex
 		if a.ID != r.Provider {
 			return errAccessDenie
 		}
-		if err := exchange.CheckExchange(r.Status, exchange.InProgress); err != nil {
-			return errTransition
-		}
-		var escrow, requesterAcc uuid.UUID
-		if err := tx.QueryRow(ctx, `INSERT INTO compte (type_compte, id_echange) VALUES ('SEQUESTRE', $1) RETURNING id_compte`, r.ID).Scan(&escrow); err != nil {
-			return err
-		}
-		if err := tx.QueryRow(ctx, `SELECT id_compte FROM compte WHERE id_utilisateur = $1`, r.Requester).Scan(&requesterAcc); err != nil {
-			return err
-		}
-		if _, err := s.transfer(ctx, tx, transferReq{From: requesterAcc, To: escrow, Amount: r.Total, Kind: ledger.Block,
-			Key: "blocage:" + r.ID.String(), ExchangeID: &r.ID}); err != nil {
-			return err
-		}
-		if _, err := tx.Exec(ctx, `UPDATE echange SET date_acceptation = $2 WHERE id_echange = $1`, r.ID, s.now()); err != nil {
-			return err
-		}
-		if err := s.setExchangeStatus(ctx, tx, &r, exchange.InProgress, &a.ID, ""); err != nil {
-			return err
-		}
-		ms, err := milestoneIDs(ctx, tx, r.ID)
-		if err != nil {
-			return err
-		}
-		for i, d := range exchange.Deadlines(s.now(), r.Days, len(ms)) {
-			if _, err := tx.Exec(ctx, `UPDATE jalon SET echeance = $2 WHERE id_jalon = $1`, ms[i], d); err != nil {
-				return err
-			}
-		}
-		return s.setMilestoneStatus(ctx, tx, ms[0], exchange.Pending, exchange.Active, &a.ID, "")
+		return s.startExchange(ctx, tx, &r, a.ID)
 	})
 	if err != nil {
 		return ExchangeView{}, err
 	}
 	return s.GetExchange(ctx, a, id)
+}
+
+// startExchange bloque le montant total en séquestre, fixe les échéances des
+// jalons (D8) et démarre le premier (RG11). Si le demandeur ne couvre pas le
+// montant, errInsufficient annule toute la transaction.
+func (s *Service) startExchange(ctx context.Context, tx pgx.Tx, r *exRow, by uuid.UUID) error {
+	if err := exchange.CheckExchange(r.Status, exchange.InProgress); err != nil {
+		return errTransition
+	}
+	var escrow, requesterAcc uuid.UUID
+	if err := tx.QueryRow(ctx, `INSERT INTO compte (type_compte, id_echange) VALUES ('SEQUESTRE', $1) RETURNING id_compte`, r.ID).Scan(&escrow); err != nil {
+		return err
+	}
+	if err := tx.QueryRow(ctx, `SELECT id_compte FROM compte WHERE id_utilisateur = $1`, r.Requester).Scan(&requesterAcc); err != nil {
+		return err
+	}
+	if _, err := s.transfer(ctx, tx, transferReq{From: requesterAcc, To: escrow, Amount: r.Total, Kind: ledger.Block,
+		Key: "blocage:" + r.ID.String(), ExchangeID: &r.ID}); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE echange SET date_acceptation = $2 WHERE id_echange = $1`, r.ID, s.now()); err != nil {
+		return err
+	}
+	if err := s.setExchangeStatus(ctx, tx, r, exchange.InProgress, &by, ""); err != nil {
+		return err
+	}
+	ms, err := milestoneIDs(ctx, tx, r.ID)
+	if err != nil {
+		return err
+	}
+	for i, d := range exchange.Deadlines(s.now(), r.Days, len(ms)) {
+		if _, err := tx.Exec(ctx, `UPDATE jalon SET echeance = $2 WHERE id_jalon = $1`, ms[i], d); err != nil {
+			return err
+		}
+	}
+	return s.setMilestoneStatus(ctx, tx, ms[0], exchange.Pending, exchange.Active, &by, "")
 }
 
 func milestoneIDs(ctx context.Context, q querier, exchangeID uuid.UUID) ([]uuid.UUID, error) {
@@ -457,7 +466,7 @@ func (s *Service) GetExchange(ctx context.Context, a Actor, id uuid.UUID) (Excha
 const exchangeSelect = `
 	SELECT e.id_echange, e.statut_echange, e.montant_total, e.delai_jours, e.depot_owner, e.depot_nom, e.besoin,
 	       e.date_creation, e.date_acceptation, e.date_cloture, e.annulation_demandee_par,
-	       o.id_offre, o.titre_offre, p.titre_pack, p.type_preuve,
+	       e.id_offre, e.id_annonce, COALESCE(o.titre_offre, a.titre_annonce), p.titre_pack, p.type_preuve,
 	       d.id_utilisateur, d.pseudo, d.github_login, d.score_reputation::float8,
 	       (SELECT count(*) FROM jalon j2 JOIN echange e2 USING (id_echange)
 	         WHERE e2.id_prestataire = d.id_utilisateur AND j2.statut_jalon = 'LIBERE')::int,
@@ -468,8 +477,9 @@ const exchangeSelect = `
 	       COALESCE((SELECT SUM(montant) FROM mouvement WHERE id_echange = e.id_echange AND type_mouvement = 'LIBERATION'), 0)::bigint,
 	       COALESCE((SELECT SUM(montant) FROM mouvement WHERE id_echange = e.id_echange AND type_mouvement = 'REMBOURSEMENT'), 0)::bigint
 	FROM echange e
-	JOIN offre o USING (id_offre)
-	JOIN pack p USING (id_pack)
+	LEFT JOIN offre o ON o.id_offre = e.id_offre
+	LEFT JOIN annonce a ON a.id_annonce = e.id_annonce
+	JOIN pack p ON p.id_pack = e.id_pack
 	JOIN utilisateur d ON d.id_utilisateur = e.id_demandeur
 	JOIN utilisateur r ON r.id_utilisateur = e.id_prestataire`
 
@@ -477,7 +487,7 @@ func scanExchange(row pgx.Row) (ExchangeView, error) {
 	var x ExchangeView
 	err := row.Scan(&x.ID, &x.Status, &x.Total, &x.Days, &x.Repo.Owner, &x.Repo.Name, &x.Need,
 		&x.CreatedAt, &x.AcceptedAt, &x.ClosedAt, &x.CancelRequestedBy,
-		&x.Offer.ID, &x.Offer.Title, &x.Offer.PackTitle, &x.Offer.ProofType,
+		&x.Offer.ID, &x.Offer.AnnouncementID, &x.Offer.Title, &x.Offer.PackTitle, &x.Offer.ProofType,
 		&x.Requester.ID, &x.Requester.Pseudo, &x.Requester.GitHubLogin, &x.Requester.Reputation, &x.Requester.Deliveries,
 		&x.Provider.ID, &x.Provider.Pseudo, &x.Provider.GitHubLogin, &x.Provider.Reputation, &x.Provider.Deliveries,
 		&x.Escrow.Locked, &x.Escrow.Released, &x.Escrow.Refunded)

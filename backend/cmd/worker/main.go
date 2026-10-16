@@ -58,7 +58,7 @@ func main() {
 				level = slog.LevelError // alerte : le grand livre est incohérent
 			}
 			logger.Log(ctx, level, "passage", slog.Int("liberations_tacites", r.TacitReleases),
-				slog.Int("preuves_reverifiees", r.ProofsRechecked), slog.Int("secrets_expires", r.SecretsExpired),
+				slog.Int("preuves_reverifiees", r.ProofsRechecked), slog.Int("secrets_expires", r.SecretsExpired), slog.Int("annonces_expirees", r.AnnouncementsExp),
 				slog.Int("incoherences_grand_livre", r.LedgerMismatches), slog.Int64("somme_soldes", r.LedgerTotal))
 		}
 		select {

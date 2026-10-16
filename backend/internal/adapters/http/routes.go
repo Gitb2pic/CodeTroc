@@ -47,6 +47,17 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	pub.GET("/offres", cat.listOffers)
 	pub.GET("/offres/:id", cat.getOffer)
 
+	ann := announcementHandlers{svc: o.App}
+	pub.GET("/annonces", ann.list)
+	pub.GET("/annonces/:id", ann.get)
+	m.POST("/annonces", ann.create)
+	m.POST("/annonces/:id/retirer", ann.withdraw)
+	m.GET("/annonces/:id/candidatures", ann.applications)
+	m.POST("/annonces/:id/candidatures", ann.apply)
+	m.POST("/annonces/:id/candidatures/:cid/accepter", idempotent(o.App), ann.accept)
+	m.POST("/annonces/:id/candidatures/:cid/refuser", ann.refuse)
+	m.POST("/annonces/:id/candidatures/:cid/retirer", ann.withdrawApplication)
+
 	ex := exchangeHandlers{svc: o.App}
 	idem := idempotent(o.App)
 	m.POST("/echanges", ex.create)

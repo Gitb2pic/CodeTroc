@@ -264,6 +264,127 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/annonces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Annonces ouvertes (demandes d'aide), ou les miennes avec mes=true (F17) */
+        get: operations["listAnnouncements"];
+        put?: never;
+        /** Publier une annonce : le budget doit être couvert par le solde disponible */
+        post: operations["publishAnnouncement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Détail d'une annonce ; fermée, elle n'est visible que de son auteur et de ses candidats */
+        get: operations["getAnnouncement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}/retirer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retirer son annonce ouverte ; les candidatures en attente sont refusées */
+        post: operations["withdrawAnnouncement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}/candidatures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Candidatures : toutes pour l'auteur, la sienne pour un prestataire */
+        get: operations["listApplications"];
+        put?: never;
+        /** Candidater : prix, délai et jalons proposés (somme = prix, RG10) */
+        post: operations["applyToAnnouncement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}/candidatures/{cid}/accepter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retenir une candidature (auteur) : crée l'échange EN_COURS et bloque le séquestre */
+        post: operations["acceptApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}/candidatures/{cid}/refuser": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refuser une candidature (auteur) */
+        post: operations["refuseApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}/candidatures/{cid}/retirer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retirer sa candidature en attente */
+        post: operations["withdrawApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/echanges": {
         parameters: {
             query?: never;
@@ -919,12 +1040,20 @@ export interface components {
             demandeur: components["schemas"]["MemberSummary"];
             prestataire: components["schemas"]["MemberSummary"];
             offre: {
-                /** Format: uuid */
-                id: string;
+                /**
+                 * Format: uuid
+                 * @description Offre d'origine ; null pour un échange né d'une annonce (F17).
+                 */
+                id: string | null;
                 titre: string;
                 pack: string;
                 type_preuve: components["schemas"]["ProofType"];
             };
+            /**
+             * Format: uuid
+             * @description Annonce d'origine (F17) ; null pour un échange né d'une offre.
+             */
+            id_annonce: string | null;
             jalons: components["schemas"]["ExchangeMilestone"][];
             sequestre: {
                 bloque: number;
@@ -1032,6 +1161,82 @@ export interface components {
             };
             prestataire: components["schemas"]["MemberSummary"];
         };
+        Announcement: {
+            /** Format: uuid */
+            id: string;
+            titre: string;
+            besoin: string;
+            depot_url: string;
+            budget_credits: number;
+            delai_jours: number;
+            /** @enum {integer} */
+            duree_sprint_jours: 7 | 14;
+            jalons: components["schemas"]["Milestone"][];
+            /** @enum {string} */
+            statut: "OUVERTE" | "POURVUE" | "RETIREE" | "EXPIREE";
+            /** Format: date-time */
+            date_publication: string;
+            /** Format: date-time */
+            date_expiration: string;
+            pack: {
+                /** Format: uuid */
+                id: string;
+                titre: string;
+                type_preuve: components["schemas"]["ProofType"];
+                competences: string[];
+            };
+            auteur: components["schemas"]["MemberSummary"];
+            candidatures_en_attente: number;
+            /**
+             * Format: uuid
+             * @description Candidature en attente de l'appelant.
+             */
+            ma_candidature: string | null;
+            /**
+             * Format: uuid
+             * @description Échange créé (annonce pourvue) ; visible de ses parties.
+             */
+            id_echange: string | null;
+        };
+        AnnouncementInput: {
+            /** Format: uuid */
+            id_pack: string;
+            titre: string;
+            besoin: string;
+            /** @example https://github.com/acme/shop-api */
+            depot_url: string;
+            budget_credits: number;
+            delai_jours: number;
+            /**
+             * @default 7
+             * @enum {integer}
+             */
+            duree_sprint_jours: 7 | 14;
+            jalons: components["schemas"]["Milestone"][];
+        };
+        Application: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            id_annonce: string;
+            prix_credits: number;
+            delai_jours: number;
+            message: string;
+            jalons: components["schemas"]["Milestone"][];
+            /** @enum {string} */
+            statut: "EN_ATTENTE" | "ACCEPTEE" | "REFUSEE" | "RETIREE";
+            /** Format: date-time */
+            date_candidature: string;
+            /** Format: date-time */
+            date_decision: string | null;
+            prestataire: components["schemas"]["MemberSummary"];
+        };
+        ApplicationInput: {
+            prix_credits: number;
+            delai_jours: number;
+            message?: string;
+            jalons: components["schemas"]["Milestone"][];
+        };
         MemberSummary: {
             /** Format: uuid */
             id: string;
@@ -1135,6 +1340,7 @@ export interface components {
     };
     parameters: {
         Id: string;
+        Cid: string;
         Limit: number;
         /** @description Clé unique par action (8 à 100 caractères). Rejouer la même requête renvoie la même réponse. */
         IdempotencyKey: string;
@@ -1644,6 +1850,258 @@ export interface operations {
             401: components["responses"]["Problem"];
             403: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+        };
+    };
+    listAnnouncements: {
+        parameters: {
+            query?: {
+                pack?: string;
+                q?: string;
+                /** @description true : mes annonces, tous statuts (authentification requise) */
+                mes?: boolean;
+                limit?: components["parameters"]["Limit"];
+                /** @description Valeur next_cursor de la page précédente. */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Page d'annonces. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["Announcement"][];
+                        next_cursor: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+        };
+    };
+    publishAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementInput"];
+            };
+        };
+        responses: {
+            /** @description Annonce publiée. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Announcement"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    getAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Annonce. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Announcement"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    withdrawAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Annonce retirée. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Announcement"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    listApplications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Candidatures, de la plus ancienne à la plus récente. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["Application"][];
+                    };
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    applyToAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationInput"];
+            };
+        };
+        responses: {
+            /** @description Candidature déposée. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Application"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    acceptApplication: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Clé unique par action (8 à 100 caractères). Rejouer la même requête renvoie la même réponse. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+                cid: components["parameters"]["Cid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Échange créé. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Exchange"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    refuseApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+                cid: components["parameters"]["Cid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Candidature refusée. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Application"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    withdrawApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+                cid: components["parameters"]["Cid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Candidature retirée. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Application"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
         };
     };
     listMyExchanges: {

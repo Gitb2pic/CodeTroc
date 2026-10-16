@@ -1,0 +1,10 @@
+DROP INDEX ux_echange_annonce;
+ALTER TABLE echange DROP CONSTRAINT ck_echange_origine;
+DELETE FROM echange WHERE id_annonce IS NOT NULL;
+ALTER TABLE echange DROP COLUMN id_annonce;
+ALTER TABLE echange ALTER COLUMN id_offre SET NOT NULL;
+ALTER TABLE echange DROP COLUMN id_pack;
+DROP TABLE candidature;
+DROP TABLE annonce;
+DROP TYPE statut_candidature;
+DROP TYPE statut_annonce;
