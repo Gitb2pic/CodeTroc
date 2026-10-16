@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, type ReactNode } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api, call } from '../../api/client';
 import { useResource } from '../../api/useResource';
 import { PackCard } from '../../components/PackCard';
@@ -8,8 +8,60 @@ import { plural } from '../../domain/logic';
 import { offerToPack } from '../format';
 import { Loaded } from '../kit';
 import { LIVE_ROUTES as R } from '../routes';
+import { AnnouncementCard } from './AnnouncementPages';
 
 export function CatalogPage() {
+  const [params, setParams] = useSearchParams();
+  const view = params.get('vue') === 'annonces' ? 'annonces' : 'offres';
+  const setView = (v: 'offres' | 'annonces') => setParams(v === 'annonces' ? { vue: 'annonces' } : {}, { replace: true });
+  const toggle = <SegButtons options={[['offres', 'Offres des prestataires'], ['annonces', "Demandes d'aide"]]} value={view} onChange={setView} />;
+  return view === 'annonces' ? <AnnouncementsView toggle={toggle} /> : <OffersView toggle={toggle} />;
+}
+
+function AnnouncementsView({ toggle }: { toggle: ReactNode }) {
+  const navigate = useNavigate();
+  const [q, setQ] = useState('');
+  const [scope, setScope] = useState<'toutes' | 'miennes'>('toutes');
+  const mine = scope === 'miennes';
+  const list = useResource(() => call(() => api.GET('/annonces', { params: { query: { q: q || undefined, mes: mine || undefined, limit: 50 } } })), [q, mine]);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <PageTitle
+        title="Catalogue"
+        sub="Des membres décrivent leur besoin : propose ton prix, ton délai et tes jalons."
+        action={
+          <button className="btn btn-primary" onClick={() => navigate(R.createAnnouncement)}>
+            <Icon name="plus" />
+            Publier une annonce
+          </button>
+        }
+      />
+      {toggle}
+      <div className="filters">
+        <label className="search" style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, padding: '0 12px', borderRadius: 9, border: '1px solid var(--bd2)', background: 'var(--s1)', color: 'var(--tx3)' }}>
+          <Icon name="search" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="pipeline, audit, api…" aria-label="Rechercher une annonce" style={{ flex: 1, border: 0, background: 'none', color: 'var(--tx)', fontSize: 14, outline: 'none' }} />
+        </label>
+        <SegButtons options={[['toutes', 'Toutes'], ['miennes', 'Mes annonces']]} value={scope} onChange={setScope} />
+      </div>
+      <Loaded r={list} what="Les annonces">
+        {(page) =>
+          page.items.length === 0 ? (
+            <EmptyState icon="hand" title="Aucune annonce" actions={<button className="btn btn-primary" onClick={() => navigate(R.createAnnouncement)} style={{ fontSize: 13 }}>Publier une annonce</button>}>
+              Tu as besoin d'aide ? Décris ton besoin, les prestataires viendront à toi.
+            </EmptyState>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 12 }}>
+              {page.items.map((a) => <AnnouncementCard key={a.id} a={a} onOpen={() => navigate(R.announcement(a.id))} />)}
+            </div>
+          )
+        }
+      </Loaded>
+    </div>
+  );
+}
+
+function OffersView({ toggle }: { toggle: ReactNode }) {
   const navigate = useNavigate();
   const [q, setQ] = useState('');
   const [maxPrice, setMaxPrice] = useState(0);
@@ -31,6 +83,7 @@ export function CatalogPage() {
           </button>
         }
       />
+      {toggle}
       <div className="filters">
         <label className="search" style={{ display: 'flex', alignItems: 'center', gap: 8, height: 40, padding: '0 12px', borderRadius: 9, border: '1px solid var(--bd2)', background: 'var(--s1)', color: 'var(--tx3)' }}>
           <Icon name="search" />

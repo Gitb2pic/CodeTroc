@@ -5,6 +5,7 @@ package app
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,9 +59,11 @@ type Deps struct {
 	DB       *pgxpool.Pool
 	Now      func() time.Time
 	Tokens   *token.Issuer
-	OAuth    GitHubOAuth // nil si GitHub n'est pas configuré
-	GitHub   GitHubAPI   // nil si la GitHub App n'est pas configurée
-	Vault    Sealer      // nil si le coffre n'est pas configuré
+	OAuth    GitHubOAuth  // nil si GitHub n'est pas configuré
+	GitHub   GitHubAPI    // nil si la GitHub App n'est pas configurée
+	Issues   GitHubIssues // nil : synchronisation Scrum désactivée (F16)
+	Vault    Sealer       // nil si le coffre n'est pas configuré
+	AppURL   string       // URL publique du site, pour les liens des issues
 	Settings Settings
 }
 
@@ -71,7 +74,9 @@ type Service struct {
 	tokens   *token.Issuer
 	oauth    GitHubOAuth
 	github   GitHubAPI
+	issues   GitHubIssues
 	vault    Sealer
+	appURL   string
 	settings Settings
 }
 
@@ -81,7 +86,8 @@ func New(d Deps) *Service {
 	if now == nil {
 		now = time.Now
 	}
-	return &Service{db: d.DB, now: func() time.Time { return now().UTC() }, tokens: d.Tokens, oauth: d.OAuth, github: d.GitHub, vault: d.Vault, settings: d.Settings}
+	return &Service{db: d.DB, now: func() time.Time { return now().UTC() }, tokens: d.Tokens, oauth: d.OAuth, github: d.GitHub, issues: d.Issues, vault: d.Vault,
+		appURL: strings.TrimRight(d.AppURL, "/"), settings: d.Settings}
 }
 
 // tx exécute fn dans une transaction READ COMMITTED : validée si fn réussit,

@@ -1,0 +1,12 @@
+DROP TABLE outbox_github;
+DROP TABLE avenant;
+DROP TABLE story;
+DROP TABLE sprint;
+ALTER TABLE jalon DROP COLUMN github_milestone_no;
+DROP TABLE projet_scrum;
+ALTER TABLE echange DROP COLUMN duree_sprint_jours;
+ALTER TABLE offre DROP COLUMN duree_sprint_jours;
+DROP TYPE statut_avenant;
+DROP TYPE statut_synchro;
+DROP TYPE statut_sprint;
+DROP TYPE statut_story;

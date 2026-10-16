@@ -4,6 +4,7 @@ import { consumeLoginOutcome, SessionProvider, useSession } from '../api/session
 import { useApp } from '../store/AppStore';
 import { LiveLayout } from './LiveLayout';
 import { AdminPage } from './pages/AdminPage';
+import { AnnouncementPage, CreateAnnouncementPage } from './pages/AnnouncementPages';
 import { CatalogPage } from './pages/CatalogPage';
 import { CreateOfferPage } from './pages/CreateOfferPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -50,6 +51,8 @@ export function LiveRoutes() {
             <Route path={R.cat} element={<CatalogPage />} />
             <Route path="/catalogue/:id" element={<OfferPage />} />
             <Route path={R.create} element={<CreateOfferPage />} />
+            <Route path={R.createAnnouncement} element={<CreateAnnouncementPage />} />
+            <Route path="/annonces/:id" element={<AnnouncementPage />} />
             <Route path="/echanges/:id" element={<ExchangePage />} />
             <Route path={R.wallet} element={<WalletPage />} />
             <Route path={R.notif} element={<NotificationsPage />} />

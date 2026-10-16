@@ -264,6 +264,127 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/annonces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Annonces ouvertes (demandes d'aide), ou les miennes avec mes=true (F17) */
+        get: operations["listAnnouncements"];
+        put?: never;
+        /** Publier une annonce : le budget doit être couvert par le solde disponible */
+        post: operations["publishAnnouncement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Détail d'une annonce ; fermée, elle n'est visible que de son auteur et de ses candidats */
+        get: operations["getAnnouncement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}/retirer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retirer son annonce ouverte ; les candidatures en attente sont refusées */
+        post: operations["withdrawAnnouncement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}/candidatures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Candidatures : toutes pour l'auteur, la sienne pour un prestataire */
+        get: operations["listApplications"];
+        put?: never;
+        /** Candidater : prix, délai et jalons proposés (somme = prix, RG10) */
+        post: operations["applyToAnnouncement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}/candidatures/{cid}/accepter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retenir une candidature (auteur) : crée l'échange EN_COURS et bloque le séquestre */
+        post: operations["acceptApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}/candidatures/{cid}/refuser": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refuser une candidature (auteur) */
+        post: operations["refuseApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/annonces/{id}/candidatures/{cid}/retirer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retirer sa candidature en attente */
+        post: operations["withdrawApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/echanges": {
         parameters: {
             query?: never;
@@ -344,6 +465,195 @@ export interface paths {
         put?: never;
         /** Annuler (demandeur si proposé ; accord des deux parties ou abandon après échéance si en cours) */
         post: operations["cancelExchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/echanges/{id}/scrum": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Projet Scrum de l'échange (parties, arbitre en lecture) */
+        get: operations["getScrum"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Objectif produit et Definition of Done (demandeur, Product Owner) */
+        patch: operations["patchScrum"];
+        trace?: never;
+    };
+    "/echanges/{id}/scrum/planning": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gantt : jalons et sprints imbriqués, retard et risque */
+        get: operations["getScrumPlanning"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/echanges/{id}/scrum/sprints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sprints du projet */
+        get: operations["listSprints"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/echanges/{id}/scrum/sprints/{numero}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Objectif d'un sprint à venir ou en cours (parties) */
+        patch: operations["patchSprint"];
+        trace?: never;
+    };
+    "/echanges/{id}/scrum/sprints/{numero}/retro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Rétrospective d'un sprint terminé (parties) */
+        put: operations["saveRetro"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/echanges/{id}/scrum/stories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stories du projet, par priorité */
+        get: operations["listStories"];
+        put?: never;
+        /** Ajouter une story au backlog ou à un sprint (demandeur, Product Owner) */
+        post: operations["createStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/echanges/{id}/scrum/stories/{sid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Modifier une story : contenu, priorité et sprint (PO), statut et points (équipe) */
+        patch: operations["patchStory"];
+        trace?: never;
+    };
+    "/echanges/{id}/scrum/avenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Proposer de nouvelles échéances (avenant de planning, D21) */
+        post: operations["proposeAmendment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/echanges/{id}/scrum/avenants/{aid}/accepter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accepter l'avenant de l'autre partie : les sprints à venir sont redécoupés */
+        post: operations["acceptAmendment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/echanges/{id}/scrum/avenants/{aid}/refuser": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refuser (l'autre partie) ou retirer (son auteur) un avenant */
+        post: operations["refuseAmendment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/echanges/{id}/scrum/synchro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Relancer la synchronisation GitHub du projet */
+        post: operations["resyncScrum"];
         delete?: never;
         options?: never;
         head?: never;
@@ -919,12 +1229,20 @@ export interface components {
             demandeur: components["schemas"]["MemberSummary"];
             prestataire: components["schemas"]["MemberSummary"];
             offre: {
-                /** Format: uuid */
-                id: string;
+                /**
+                 * Format: uuid
+                 * @description Offre d'origine ; null pour un échange né d'une annonce (F17).
+                 */
+                id: string | null;
                 titre: string;
                 pack: string;
                 type_preuve: components["schemas"]["ProofType"];
             };
+            /**
+             * Format: uuid
+             * @description Annonce d'origine (F17) ; null pour un échange né d'une offre.
+             */
+            id_annonce: string | null;
             jalons: components["schemas"]["ExchangeMilestone"][];
             sequestre: {
                 bloque: number;
@@ -1019,6 +1337,8 @@ export interface components {
             prix_credits: number;
             delai_jours: number;
             jalons: components["schemas"]["Milestone"][];
+            /** @enum {integer} */
+            duree_sprint_jours: 7 | 14;
             /** @enum {string} */
             statut: "PUBLIEE" | "RETIREE";
             /** Format: date-time */
@@ -1031,6 +1351,215 @@ export interface components {
                 competences: string[];
             };
             prestataire: components["schemas"]["MemberSummary"];
+        };
+        Announcement: {
+            /** Format: uuid */
+            id: string;
+            titre: string;
+            besoin: string;
+            depot_url: string;
+            budget_credits: number;
+            delai_jours: number;
+            /** @enum {integer} */
+            duree_sprint_jours: 7 | 14;
+            jalons: components["schemas"]["Milestone"][];
+            /** @enum {string} */
+            statut: "OUVERTE" | "POURVUE" | "RETIREE" | "EXPIREE";
+            /** Format: date-time */
+            date_publication: string;
+            /** Format: date-time */
+            date_expiration: string;
+            pack: {
+                /** Format: uuid */
+                id: string;
+                titre: string;
+                type_preuve: components["schemas"]["ProofType"];
+                competences: string[];
+            };
+            auteur: components["schemas"]["MemberSummary"];
+            candidatures_en_attente: number;
+            /**
+             * Format: uuid
+             * @description Candidature en attente de l'appelant.
+             */
+            ma_candidature: string | null;
+            /**
+             * Format: uuid
+             * @description Échange créé (annonce pourvue) ; visible de ses parties.
+             */
+            id_echange: string | null;
+        };
+        AnnouncementInput: {
+            /** Format: uuid */
+            id_pack: string;
+            titre: string;
+            besoin: string;
+            /** @example https://github.com/acme/shop-api */
+            depot_url: string;
+            budget_credits: number;
+            delai_jours: number;
+            /**
+             * @description 7 par défaut (D20).
+             * @enum {integer}
+             */
+            duree_sprint_jours?: 7 | 14;
+            jalons: components["schemas"]["Milestone"][];
+        };
+        Application: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            id_annonce: string;
+            prix_credits: number;
+            delai_jours: number;
+            message: string;
+            jalons: components["schemas"]["Milestone"][];
+            /** @enum {string} */
+            statut: "EN_ATTENTE" | "ACCEPTEE" | "REFUSEE" | "RETIREE";
+            /** Format: date-time */
+            date_candidature: string;
+            /** Format: date-time */
+            date_decision: string | null;
+            prestataire: components["schemas"]["MemberSummary"];
+        };
+        ApplicationInput: {
+            prix_credits: number;
+            delai_jours: number;
+            message?: string;
+            jalons: components["schemas"]["Milestone"][];
+        };
+        /** @enum {string} */
+        StoryStatus: "BACKLOG" | "A_FAIRE" | "EN_COURS" | "EN_REVUE" | "TERMINE";
+        /** @enum {string} */
+        SprintStatus: "PLANIFIE" | "ACTIF" | "TERMINE" | "ANNULE";
+        Amendment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            propose_par: string;
+            echeances: string[];
+            motif: string;
+            /** @enum {string} */
+            statut: "PROPOSE" | "ACCEPTE" | "REFUSE" | "RETIRE";
+            /** Format: date-time */
+            date_proposition: string;
+            /** Format: date-time */
+            date_decision: string | null;
+            /** Format: uuid */
+            decide_par: string | null;
+        };
+        ScrumProject: {
+            /** Format: uuid */
+            id_echange: string;
+            template: string;
+            objectif_produit: string;
+            definition_of_done: string[];
+            definition_of_ready: string[];
+            colonnes: components["schemas"]["StoryStatus"][];
+            points_possibles: number[];
+            gabarit_story: string;
+            /** @enum {integer} */
+            duree_sprint_jours: 7 | 14;
+            /** @enum {string} */
+            statut_synchro: "INACTIVE" | "ACTIVE" | "PERMISSION_MANQUANTE" | "ERREUR";
+            detail_synchro: string | null;
+            appels_github_en_attente: number;
+            /** @enum {string} */
+            mon_role: "PRODUCT_OWNER" | "EQUIPE_DEV" | "ARBITRE";
+            avenant_en_cours: components["schemas"]["Amendment"] | null;
+            /** Format: date-time */
+            date_creation: string;
+        };
+        Sprint: {
+            /** Format: uuid */
+            id: string;
+            numero: number;
+            /** @description Ordre du jalon. */
+            jalon: number;
+            /** Format: date-time */
+            debut_prevu: string;
+            /** Format: date-time */
+            fin_prevue: string;
+            /** Format: date-time */
+            debut_reel: string | null;
+            /** Format: date-time */
+            fin_reelle: string | null;
+            statut: components["schemas"]["SprintStatus"];
+            objectif: string;
+            github_issue: number | null;
+            points_prevus: number;
+            points_faits: number;
+            retro: {
+                bien: string | null;
+                a_ameliorer: string | null;
+                actions: string | null;
+            };
+        };
+        Story: {
+            /** Format: uuid */
+            id: string;
+            jalon: number | null;
+            sprint: number | null;
+            titre: string;
+            description: string;
+            criteres: string[];
+            points: number | null;
+            priorite: number;
+            statut: components["schemas"]["StoryStatus"];
+            github_issue: number | null;
+            /** Format: date-time */
+            date_creation: string;
+            /** Format: date-time */
+            date_terminee: string | null;
+            /** Format: uuid */
+            cree_par: string;
+        };
+        ScrumPlanning: {
+            /** Format: date-time */
+            debut: string;
+            /** Format: date-time */
+            fin: string;
+            /** Format: date-time */
+            aujourd_hui: string;
+            jalons: {
+                ordre: number;
+                titre: string;
+                /** Format: date-time */
+                debut: string;
+                /** Format: date-time */
+                echeance: string;
+                statut_jalon: string;
+                montant: number;
+                en_retard: boolean;
+                /** @enum {string} */
+                risque: "AUCUN" | "MOYEN" | "ELEVE";
+                github_milestone: number | null;
+                points_faits: number;
+                points_prevus: number;
+                sprints: {
+                    numero: number;
+                    /** Format: date-time */
+                    debut_prevu: string;
+                    /** Format: date-time */
+                    fin_prevue: string;
+                    /** Format: date-time */
+                    debut_reel: string | null;
+                    /** Format: date-time */
+                    fin_reelle: string | null;
+                    statut: components["schemas"]["SprintStatus"];
+                    points_prevus: number;
+                    points_faits: number;
+                    github_issue: number | null;
+                }[];
+            }[];
+            marqueurs: {
+                /** @enum {string} */
+                type: "PREUVE_PR";
+                /** Format: date-time */
+                date: string;
+                jalon: number;
+                pr: number | null;
+            }[];
         };
         MemberSummary: {
             /** Format: uuid */
@@ -1048,6 +1577,11 @@ export interface components {
             prix_credits: number;
             delai_jours: number;
             jalons: components["schemas"]["Milestone"][];
+            /**
+             * @description Durée des sprints du projet Scrum (D20) ; 7 par défaut.
+             * @enum {integer}
+             */
+            duree_sprint_jours?: 7 | 14;
         };
         Balance: {
             /** @description Crédits dépensables. */
@@ -1135,6 +1669,7 @@ export interface components {
     };
     parameters: {
         Id: string;
+        Cid: string;
         Limit: number;
         /** @description Clé unique par action (8 à 100 caractères). Rejouer la même requête renvoie la même réponse. */
         IdempotencyKey: string;
@@ -1646,6 +2181,258 @@ export interface operations {
             404: components["responses"]["Problem"];
         };
     };
+    listAnnouncements: {
+        parameters: {
+            query?: {
+                pack?: string;
+                q?: string;
+                /** @description true : mes annonces, tous statuts (authentification requise) */
+                mes?: boolean;
+                limit?: components["parameters"]["Limit"];
+                /** @description Valeur next_cursor de la page précédente. */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Page d'annonces. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["Announcement"][];
+                        next_cursor: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+        };
+    };
+    publishAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementInput"];
+            };
+        };
+        responses: {
+            /** @description Annonce publiée. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Announcement"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    getAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Annonce. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Announcement"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    withdrawAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Annonce retirée. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Announcement"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    listApplications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Candidatures, de la plus ancienne à la plus récente. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["Application"][];
+                    };
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    applyToAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationInput"];
+            };
+        };
+        responses: {
+            /** @description Candidature déposée. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Application"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    acceptApplication: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Clé unique par action (8 à 100 caractères). Rejouer la même requête renvoie la même réponse. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+                cid: components["parameters"]["Cid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Échange créé. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Exchange"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    refuseApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+                cid: components["parameters"]["Cid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Candidature refusée. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Application"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    withdrawApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+                cid: components["parameters"]["Cid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Candidature retirée. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Application"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
     listMyExchanges: {
         parameters: {
             query?: {
@@ -1827,6 +2614,421 @@ export interface operations {
             404: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
+        };
+    };
+    getScrum: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Projet. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrumProject"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    patchScrum: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    objectif_produit?: string;
+                    definition_of_done?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Projet. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrumProject"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    getScrumPlanning: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Planning. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrumPlanning"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    listSprints: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sprints, par numéro. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["Sprint"][];
+                    };
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    patchSprint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+                numero: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    objectif: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sprint. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sprint"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    saveRetro: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+                numero: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    bien?: string;
+                    a_ameliorer?: string;
+                    actions?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sprint. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sprint"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    listStories: {
+        parameters: {
+            query?: {
+                /** @description Numéro de sprint, ou backlog */
+                sprint?: string;
+                jalon?: number;
+                statut?: components["schemas"]["StoryStatus"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stories. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["Story"][];
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    createStory: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Clé unique par action (8 à 100 caractères). Rejouer la même requête renvoie la même réponse. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    titre: string;
+                    description?: string;
+                    criteres?: string[];
+                    jalon?: number;
+                    sprint?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Story créée. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Story"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    patchStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    titre?: string;
+                    description?: string;
+                    criteres?: string[];
+                    priorite?: number;
+                    jalon?: number;
+                    /** @description null : retour au backlog */
+                    sprint?: number | null;
+                    statut?: components["schemas"]["StoryStatus"];
+                    /** @enum {integer} */
+                    points?: 0 | 1 | 2 | 3 | 5 | 8 | 13 | 21;
+                };
+            };
+        };
+        responses: {
+            /** @description Story. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Story"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    proposeAmendment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Clé unique par action (8 à 100 caractères). Rejouer la même requête renvoie la même réponse. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    echeances: string[];
+                    motif?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Avenant proposé. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Amendment"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    acceptAmendment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Clé unique par action (8 à 100 caractères). Rejouer la même requête renvoie la même réponse. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+                aid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Avenant accepté. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Amendment"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    refuseAmendment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+                aid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Avenant écarté. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Amendment"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+        };
+    };
+    resyncScrum: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Clé unique par action (8 à 100 caractères). Rejouer la même requête renvoie la même réponse. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Projet. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrumProject"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
         };
     };
     submitProof: {

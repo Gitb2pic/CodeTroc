@@ -53,13 +53,14 @@ type exchangeJSON struct {
 	Requester         memberSummaryJSON `json:"demandeur"`
 	Provider          memberSummaryJSON `json:"prestataire"`
 	Offer             struct {
-		ID        uuid.UUID         `json:"id"`
+		ID        *uuid.UUID        `json:"id"`
 		Title     string            `json:"titre"`
 		PackTitle string            `json:"pack"`
 		ProofType catalog.ProofType `json:"type_preuve"`
 	} `json:"offre"`
-	Milestones []milestoneJSON `json:"jalons"`
-	Escrow     struct {
+	AnnouncementID *uuid.UUID      `json:"id_annonce"`
+	Milestones     []milestoneJSON `json:"jalons"`
+	Escrow         struct {
 		Locked   int64 `json:"bloque"`
 		Released int64 `json:"libere"`
 		Refunded int64 `json:"rembourse"`
@@ -70,7 +71,8 @@ type exchangeJSON struct {
 func toExchangeJSON(x app.ExchangeView) exchangeJSON {
 	j := exchangeJSON{ID: x.ID, Status: x.Status, Total: x.Total, Days: x.Days, RepoURL: x.Repo.URL(), Need: x.Need,
 		CreatedAt: x.CreatedAt, AcceptedAt: x.AcceptedAt, ClosedAt: x.ClosedAt, CancelRequestedBy: x.CancelRequestedBy,
-		Requester: memberSummaryJSON(x.Requester), Provider: memberSummaryJSON(x.Provider), NextActor: x.NextActor}
+		Requester: memberSummaryJSON(x.Requester), Provider: memberSummaryJSON(x.Provider), NextActor: x.NextActor,
+		AnnouncementID: x.Offer.AnnouncementID}
 	j.Offer.ID, j.Offer.Title, j.Offer.PackTitle, j.Offer.ProofType = x.Offer.ID, x.Offer.Title, x.Offer.PackTitle, x.Offer.ProofType
 	j.Escrow.Locked, j.Escrow.Released, j.Escrow.Refunded = x.Escrow.Locked, x.Escrow.Released, x.Escrow.Refunded
 	j.Milestones = make([]milestoneJSON, len(x.Milestones))

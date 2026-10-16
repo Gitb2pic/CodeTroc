@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, call, type S } from '../../api/client';
 import { useResource } from '../../api/useResource';
-import { PageTitle } from '../../components/ui';
+import { PageTitle, SegButtons } from '../../components/ui';
 import { Field, FormError, Loaded, small, useAction } from '../kit';
 import { LIVE_ROUTES as R } from '../routes';
 
@@ -23,6 +23,7 @@ function OfferForm({ packs }: { packs: S['Pack'][] }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [days, setDays] = useState(5);
+  const [sprint, setSprint] = useState<7 | 14>(7);
   const [milestones, setMilestones] = useState<S['Milestone'][]>([{ titre: '', montant: 0 }]);
   const act = useAction();
   const price = milestones.reduce((s, m) => s + (m.montant || 0), 0);
@@ -32,7 +33,7 @@ function OfferForm({ packs }: { packs: S['Pack'][] }) {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const o = await act.run(
-      () => call(() => api.POST('/offres', { body: { id_pack: packId, titre: title.trim() || pack!.titre, description: description.trim() || undefined, prix_credits: price, delai_jours: days, jalons: milestones.map((m) => ({ titre: m.titre.trim(), montant: m.montant })) } })),
+      () => call(() => api.POST('/offres', { body: { id_pack: packId, titre: title.trim() || pack!.titre, description: description.trim() || undefined, prix_credits: price, delai_jours: days, duree_sprint_jours: sprint, jalons: milestones.map((m) => ({ titre: m.titre.trim(), montant: m.montant })) } })),
       'Offre publiée au catalogue',
     );
     if (o) navigate(R.offer(o.id));
@@ -47,7 +48,12 @@ function OfferForm({ packs }: { packs: S['Pack'][] }) {
       </Field>
       <Field label="Titre de l'offre" hint="Par défaut, le titre du pack"><input className="field" maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={pack?.titre} /></Field>
       <Field label="Description"><textarea className="field" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} /></Field>
-      <Field label="Délai (jours)"><input className="field" type="number" min={1} max={60} value={days} onChange={(e) => setDays(+e.target.value)} /></Field>
+      <Field label="Délai (jours)"><input className="field" type="number" min={1} max={90} value={days} onChange={(e) => setDays(+e.target.value)} /></Field>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
+        <span style={{ fontWeight: 500 }}>Durée des sprints</span>
+        <SegButtons options={[[7, 'Sprints de 7 j'], [14, 'Sprints de 14 j']]} value={sprint} onChange={setSprint} />
+        <span className="faint" style={{ fontSize: 12 }}>Chaque jalon est découpé en sprints ; une issue GitHub est créée au début de chaque sprint.</span>
+      </div>
       <fieldset style={{ border: 0, margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <legend style={{ fontWeight: 500, fontSize: 13, marginBottom: 6 }}>Jalons (le prix est leur somme)</legend>
         {milestones.map((m, i) => (

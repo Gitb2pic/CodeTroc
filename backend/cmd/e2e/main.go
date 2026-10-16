@@ -36,7 +36,7 @@ const frontCSP = "default-src 'self'; script-src 'self'; style-src 'self' https:
 	"frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
 // Membres proposés par la fausse page d'autorisation GitHub.
-var members = []string{"sami", "lea", "arbitre", "admin"}
+var members = []string{"sami", "lea", "arbitre", "admin", "nina", "theo"}
 
 var authorize = template.Must(template.New("a").Parse(`<!doctype html><meta charset="utf-8"><title>Faux GitHub</title>
 <h1>Faux GitHub (e2e)</h1>{{range .Members}}<p><a href="/api/v1/auth/github/callback?state={{$.State}}&code={{.}}">Continuer en tant que {{.}}</a></p>{{end}}`))

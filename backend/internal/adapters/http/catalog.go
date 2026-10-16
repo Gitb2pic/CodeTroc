@@ -243,6 +243,7 @@ type offerJSON struct {
 	Price       int64               `json:"prix_credits"`
 	Days        int                 `json:"delai_jours"`
 	Milestones  []catalog.Milestone `json:"jalons"`
+	SprintDays  int                 `json:"duree_sprint_jours"`
 	Status      string              `json:"statut"`
 	PublishedAt time.Time           `json:"date_publication"`
 	Pack        struct {
@@ -255,7 +256,7 @@ type offerJSON struct {
 }
 
 func toOfferJSON(o app.OfferView) offerJSON {
-	j := offerJSON{ID: o.ID, Title: o.Title, Description: o.Description, Price: o.Price, Days: o.Days, Milestones: o.Milestones,
+	j := offerJSON{ID: o.ID, Title: o.Title, Description: o.Description, Price: o.Price, Days: o.Days, Milestones: o.Milestones, SprintDays: o.SprintDays,
 		Status: o.Status, PublishedAt: o.PublishedAt, Provider: memberSummaryJSON(o.Provider)}
 	j.Pack.ID, j.Pack.Title, j.Pack.ProofType, j.Pack.Skills = o.Pack.ID, o.Pack.Title, o.Pack.ProofType, o.Pack.Skills
 	return j
@@ -326,6 +327,7 @@ func (h catalogHandlers) createOffer(c *gin.Context) {
 		Price       int64               `json:"prix_credits"`
 		Days        int                 `json:"delai_jours"`
 		Milestones  []catalog.Milestone `json:"jalons"`
+		SprintDays  int                 `json:"duree_sprint_jours"`
 	}
 	if !bindJSON(c, &b) {
 		return
