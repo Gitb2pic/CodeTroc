@@ -15,6 +15,8 @@ type JobReport struct {
 	ProofsRechecked  int
 	SecretsExpired   int
 	AnnouncementsExp int
+	ScrumProjects    int
+	GitHubCalls      int
 	LedgerMismatches int
 	LedgerTotal      int64
 }
@@ -50,6 +52,12 @@ func (s *Service) RunScheduledJobs(ctx context.Context) (JobReport, error) {
 		return r, err
 	}
 	if r.AnnouncementsExp, err = s.ExpireAnnouncements(ctx); err != nil {
+		return r, err
+	}
+	if r.ScrumProjects, err = s.RunScrum(ctx); err != nil {
+		return r, err
+	}
+	if r.GitHubCalls, err = s.ProcessGitHubOutbox(ctx, 50); err != nil {
 		return r, err
 	}
 	if err := s.purge(ctx); err != nil {

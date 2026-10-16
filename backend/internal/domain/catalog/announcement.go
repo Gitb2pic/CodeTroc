@@ -58,8 +58,8 @@ func (a Announcement) Validate(p Pack) error {
 	if err := checkDays(a.Days); err != nil {
 		return err
 	}
-	if a.SprintDays != SprintWeek && a.SprintDays != SprintTwoWeeks {
-		return fieldErr("duree_sprint_jours", "7 ou 14 jours")
+	if err := ValidateSprintDays(a.SprintDays); err != nil {
+		return err
 	}
 	return ValidateMilestones(a.Budget, a.Milestones)
 }
@@ -76,4 +76,12 @@ func (c Application) Validate(p Pack) error {
 		return err
 	}
 	return ValidateMilestones(c.Price, c.Milestones)
+}
+
+// ValidateSprintDays : sprints de 7 ou 14 jours (D20).
+func ValidateSprintDays(d int) error {
+	if d != SprintWeek && d != SprintTwoWeeks {
+		return fieldErr("duree_sprint_jours", "7 ou 14 jours")
+	}
+	return nil
 }

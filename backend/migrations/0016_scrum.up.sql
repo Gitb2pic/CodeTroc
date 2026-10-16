@@ -35,6 +35,8 @@ CREATE TABLE sprint (
     statut_sprint   statut_sprint NOT NULL DEFAULT 'PLANIFIE',
     objectif_sprint TEXT NOT NULL DEFAULT '' CHECK (length(objectif_sprint) <= 1000),
     github_issue_no INTEGER,
+    points_prevus   SMALLINT,                -- bilan figé à la fin du sprint (vélocité)
+    points_faits    SMALLINT,
     retro_bien      TEXT CHECK (length(retro_bien) <= 2000),
     retro_ameliorer TEXT CHECK (length(retro_ameliorer) <= 2000),
     retro_actions   TEXT CHECK (length(retro_actions) <= 2000),

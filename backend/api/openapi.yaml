@@ -653,6 +653,278 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/scrum:
+    get:
+      operationId: getScrum
+      summary: 'Projet Scrum de l''échange (parties, arbitre en lecture)'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+      responses:
+        '200':
+          description: Projet.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScrumProject' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: patchScrum
+      summary: 'Objectif produit et Definition of Done (demandeur, Product Owner)'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false, properties: { objectif_produit: { type: string, maxLength: 2000 }, definition_of_done: { type: array, maxItems: 20, items: { type: string, maxLength: 200 } } } }
+      responses:
+        '200':
+          description: Projet.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScrumProject' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/scrum/planning:
+    get:
+      operationId: getScrumPlanning
+      summary: 'Gantt : jalons et sprints imbriqués, retard et risque'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+      responses:
+        '200':
+          description: Planning.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScrumPlanning' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/scrum/sprints:
+    get:
+      operationId: listSprints
+      summary: 'Sprints du projet'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+      responses:
+        '200':
+          description: Sprints, par numéro.
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: false, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Sprint' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/scrum/sprints/{numero}:
+    patch:
+      operationId: patchSprint
+      summary: 'Objectif d''un sprint à venir ou en cours (parties)'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { name: numero, in: path, required: true, schema: { type: integer, minimum: 1, maximum: 50 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false, required: [objectif], properties: { objectif: { type: string, maxLength: 1000 } } }
+      responses:
+        '200':
+          description: Sprint.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sprint' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/scrum/sprints/{numero}/retro:
+    put:
+      operationId: saveRetro
+      summary: 'Rétrospective d''un sprint terminé (parties)'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { name: numero, in: path, required: true, schema: { type: integer, minimum: 1, maximum: 50 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false, properties: { bien: { type: string, maxLength: 2000 }, a_ameliorer: { type: string, maxLength: 2000 }, actions: { type: string, maxLength: 2000 } } }
+      responses:
+        '200':
+          description: Sprint.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sprint' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/scrum/stories:
+    get:
+      operationId: listStories
+      summary: 'Stories du projet, par priorité'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { name: sprint, in: query, description: 'Numéro de sprint, ou backlog', schema: { type: string } }
+        - { name: jalon, in: query, schema: { type: integer } }
+        - { name: statut, in: query, schema: { $ref: '#/components/schemas/StoryStatus' } }
+      responses:
+        '200':
+          description: Stories.
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: false, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Story' } } } }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createStory
+      summary: 'Ajouter une story au backlog ou à un sprint (demandeur, Product Owner)'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false, required: [titre], properties: { titre: { type: string, minLength: 3, maxLength: 160 }, description: { type: string, maxLength: 4000 }, criteres: { type: array, maxItems: 20, items: { type: string, maxLength: 300 } }, jalon: { type: integer }, sprint: { type: integer } } }
+      responses:
+        '201':
+          description: Story créée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Story' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/scrum/stories/{sid}:
+    patch:
+      operationId: patchStory
+      summary: 'Modifier une story : contenu, priorité et sprint (PO), statut et points (équipe)'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { name: sid, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false, properties: { titre: { type: string }, description: { type: string }, criteres: { type: array, items: { type: string } }, priorite: { type: integer, minimum: 1 }, jalon: { type: integer }, sprint: { type: integer, nullable: true, description: 'null : retour au backlog' }, statut: { $ref: '#/components/schemas/StoryStatus' }, points: { type: integer, enum: [0, 1, 2, 3, 5, 8, 13, 21] } } }
+      responses:
+        '200':
+          description: Story.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Story' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/scrum/avenants:
+    post:
+      operationId: proposeAmendment
+      summary: 'Proposer de nouvelles échéances (avenant de planning, D21)'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false, required: [echeances], properties: { echeances: { type: array, items: { type: string, format: date-time } }, motif: { type: string, maxLength: 1000 } } }
+      responses:
+        '201':
+          description: Avenant proposé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Amendment' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/scrum/avenants/{aid}/accepter:
+    post:
+      operationId: acceptAmendment
+      summary: 'Accepter l''avenant de l''autre partie : les sprints à venir sont redécoupés'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { name: aid, in: path, required: true, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '200':
+          description: Avenant accepté.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Amendment' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/scrum/avenants/{aid}/refuser:
+    post:
+      operationId: refuseAmendment
+      summary: 'Refuser (l''autre partie) ou retirer (son auteur) un avenant'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { name: aid, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Avenant écarté.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Amendment' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /echanges/{id}/scrum/synchro:
+    post:
+      operationId: resyncScrum
+      summary: 'Relancer la synchronisation GitHub du projet'
+      tags: [scrum]
+      security: [{ bearer: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '200':
+          description: Projet.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScrumProject' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
   /jalons/{id}/preuves:
     post:
       operationId: submitProof
@@ -1570,7 +1842,7 @@ components:
     Offer:
       type: object
       additionalProperties: false
-      required: [id, titre, description, prix_credits, delai_jours, jalons, statut, date_publication, pack, prestataire]
+      required: [id, titre, description, prix_credits, delai_jours, jalons, duree_sprint_jours, statut, date_publication, pack, prestataire]
       properties:
         id: { type: string, format: uuid }
         titre: { type: string }
@@ -1578,6 +1850,7 @@ components:
         prix_credits: { type: integer }
         delai_jours: { type: integer }
         jalons: { type: array, items: { $ref: '#/components/schemas/Milestone' } }
+        duree_sprint_jours: { type: integer, enum: [7, 14] }
         statut: { type: string, enum: [PUBLIEE, RETIREE] }
         date_publication: { type: string, format: date-time }
         pack:
@@ -1631,7 +1904,7 @@ components:
         depot_url: { type: string, example: 'https://github.com/acme/shop-api' }
         budget_credits: { type: integer, minimum: 1 }
         delai_jours: { type: integer, minimum: 1, maximum: 90 }
-        duree_sprint_jours: { type: integer, enum: [7, 14], default: 7 }
+        duree_sprint_jours: { type: integer, enum: [7, 14], description: 7 par défaut (D20). }
         jalons: { type: array, minItems: 1, maxItems: 10, items: { $ref: '#/components/schemas/Milestone' } }
     Application:
       type: object
@@ -1657,6 +1930,144 @@ components:
         delai_jours: { type: integer, minimum: 1, maximum: 90 }
         message: { type: string, maxLength: 2000 }
         jalons: { type: array, minItems: 1, maxItems: 10, items: { $ref: '#/components/schemas/Milestone' } }
+    StoryStatus:
+      type: string
+      enum: [BACKLOG, A_FAIRE, EN_COURS, EN_REVUE, TERMINE]
+    SprintStatus:
+      type: string
+      enum: [PLANIFIE, ACTIF, TERMINE, ANNULE]
+    Amendment:
+      type: object
+      additionalProperties: false
+      required: [id, propose_par, echeances, motif, statut, date_proposition, date_decision, decide_par]
+      properties:
+        id: { type: string, format: uuid }
+        propose_par: { type: string, format: uuid }
+        echeances: { type: array, items: { type: string, format: date-time } }
+        motif: { type: string }
+        statut: { type: string, enum: [PROPOSE, ACCEPTE, REFUSE, RETIRE] }
+        date_proposition: { type: string, format: date-time }
+        date_decision: { type: string, format: date-time, nullable: true }
+        decide_par: { type: string, format: uuid, nullable: true }
+    ScrumProject:
+      type: object
+      additionalProperties: false
+      required: [id_echange, template, objectif_produit, definition_of_done, definition_of_ready, colonnes, points_possibles, gabarit_story,
+                 duree_sprint_jours, statut_synchro, detail_synchro, appels_github_en_attente, mon_role, avenant_en_cours, date_creation]
+      properties:
+        id_echange: { type: string, format: uuid }
+        template: { type: string }
+        objectif_produit: { type: string }
+        definition_of_done: { type: array, items: { type: string } }
+        definition_of_ready: { type: array, items: { type: string } }
+        colonnes: { type: array, items: { $ref: '#/components/schemas/StoryStatus' } }
+        points_possibles: { type: array, items: { type: integer } }
+        gabarit_story: { type: string }
+        duree_sprint_jours: { type: integer, enum: [7, 14] }
+        statut_synchro: { type: string, enum: [INACTIVE, ACTIVE, PERMISSION_MANQUANTE, ERREUR] }
+        detail_synchro: { type: string, nullable: true }
+        appels_github_en_attente: { type: integer }
+        mon_role: { type: string, enum: [PRODUCT_OWNER, EQUIPE_DEV, ARBITRE] }
+        avenant_en_cours:
+          allOf: [{ $ref: '#/components/schemas/Amendment' }]
+          nullable: true
+        date_creation: { type: string, format: date-time }
+    Sprint:
+      type: object
+      additionalProperties: false
+      required: [id, numero, jalon, debut_prevu, fin_prevue, debut_reel, fin_reelle, statut, objectif, github_issue, points_prevus, points_faits, retro]
+      properties:
+        id: { type: string, format: uuid }
+        numero: { type: integer }
+        jalon: { type: integer, description: Ordre du jalon. }
+        debut_prevu: { type: string, format: date-time }
+        fin_prevue: { type: string, format: date-time }
+        debut_reel: { type: string, format: date-time, nullable: true }
+        fin_reelle: { type: string, format: date-time, nullable: true }
+        statut: { $ref: '#/components/schemas/SprintStatus' }
+        objectif: { type: string }
+        github_issue: { type: integer, nullable: true }
+        points_prevus: { type: integer }
+        points_faits: { type: integer }
+        retro:
+          type: object
+          additionalProperties: false
+          required: [bien, a_ameliorer, actions]
+          properties:
+            bien: { type: string, nullable: true }
+            a_ameliorer: { type: string, nullable: true }
+            actions: { type: string, nullable: true }
+    Story:
+      type: object
+      additionalProperties: false
+      required: [id, jalon, sprint, titre, description, criteres, points, priorite, statut, github_issue, date_creation, date_terminee, cree_par]
+      properties:
+        id: { type: string, format: uuid }
+        jalon: { type: integer, nullable: true }
+        sprint: { type: integer, nullable: true }
+        titre: { type: string }
+        description: { type: string }
+        criteres: { type: array, items: { type: string } }
+        points: { type: integer, nullable: true }
+        priorite: { type: integer }
+        statut: { $ref: '#/components/schemas/StoryStatus' }
+        github_issue: { type: integer, nullable: true }
+        date_creation: { type: string, format: date-time }
+        date_terminee: { type: string, format: date-time, nullable: true }
+        cree_par: { type: string, format: uuid }
+    ScrumPlanning:
+      type: object
+      additionalProperties: false
+      required: [debut, fin, aujourd_hui, jalons, marqueurs]
+      properties:
+        debut: { type: string, format: date-time }
+        fin: { type: string, format: date-time }
+        aujourd_hui: { type: string, format: date-time }
+        jalons:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [ordre, titre, debut, echeance, statut_jalon, montant, en_retard, risque, github_milestone, points_faits, points_prevus, sprints]
+            properties:
+              ordre: { type: integer }
+              titre: { type: string }
+              debut: { type: string, format: date-time }
+              echeance: { type: string, format: date-time }
+              statut_jalon: { type: string }
+              montant: { type: integer }
+              en_retard: { type: boolean }
+              risque: { type: string, enum: [AUCUN, MOYEN, ELEVE] }
+              github_milestone: { type: integer, nullable: true }
+              points_faits: { type: integer }
+              points_prevus: { type: integer }
+              sprints:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [numero, debut_prevu, fin_prevue, debut_reel, fin_reelle, statut, points_prevus, points_faits, github_issue]
+                  properties:
+                    numero: { type: integer }
+                    debut_prevu: { type: string, format: date-time }
+                    fin_prevue: { type: string, format: date-time }
+                    debut_reel: { type: string, format: date-time, nullable: true }
+                    fin_reelle: { type: string, format: date-time, nullable: true }
+                    statut: { $ref: '#/components/schemas/SprintStatus' }
+                    points_prevus: { type: integer }
+                    points_faits: { type: integer }
+                    github_issue: { type: integer, nullable: true }
+        marqueurs:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [type, date, jalon, pr]
+            properties:
+              type: { type: string, enum: [PREUVE_PR] }
+              date: { type: string, format: date-time }
+              jalon: { type: integer }
+              pr: { type: integer, nullable: true }
     MemberSummary:
       type: object
       additionalProperties: false
@@ -1678,6 +2089,7 @@ components:
         prix_credits: { type: integer }
         delai_jours: { type: integer }
         jalons: { type: array, items: { $ref: '#/components/schemas/Milestone' } }
+        duree_sprint_jours: { type: integer, enum: [7, 14], description: Durée des sprints du projet Scrum (D20) ; 7 par défaut. }
     Balance:
       type: object
       additionalProperties: false

@@ -320,6 +320,7 @@ func (s *Service) ReconcilePendingProofs(ctx context.Context, olderThan time.Dur
 type WebhookResult struct {
 	Duplicate bool
 	Verified  int
+	Stories   int // stories ou sprints mis à jour par un événement issues (F16)
 }
 
 type webhookPayload struct {
@@ -353,6 +354,13 @@ func (s *Service) HandleGitHubWebhook(ctx context.Context, deliveryID, event str
 	}
 	if tag.RowsAffected() == 0 {
 		return WebhookResult{Duplicate: true}, nil
+	}
+	switch event {
+	case "issues": // F16 : avancement des stories depuis GitHub
+		n, err := s.handleIssuesEvent(ctx, payload)
+		return WebhookResult{Stories: n}, err
+	case "installation":
+		return WebhookResult{}, s.handleInstallationEvent(ctx, payload)
 	}
 	var p webhookPayload
 	if err := json.Unmarshal(payload, &p); err != nil || (p.Repository.ID == 0 && p.Repository.FullName == "") {

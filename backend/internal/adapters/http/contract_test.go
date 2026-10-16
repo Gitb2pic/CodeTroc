@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -15,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/gitb2pic/codetroc/backend/api"
+	"github.com/gitb2pic/codetroc/backend/internal/app"
 )
 
 // loadSpec charge le contrat et le rattache à l'hôte des requêtes httptest.
@@ -76,4 +80,26 @@ func TestGenericProblemsMatchSchema(t *testing.T) {
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
 		require.NoError(t, schema.VisitJSON(body), "%s %s", req.Method, req.URL.Path)
 	}
+}
+
+// TestEveryRouteIsDocumented : toute route métier montée figure dans
+// openapi.yaml, sinon ses réponses échapperaient au contrôle du contrat.
+func TestEveryRouteIsDocumented(t *testing.T) {
+	doc := loadSpec(t)
+	r, err := NewRouter(Options{Logger: slog.New(slog.NewJSONHandler(io.Discard, nil)), DB: fakeDB{}, MaxBodyBytes: 1 << 20, App: app.New(app.Deps{Settings: app.DefaultSettings()})})
+	require.NoError(t, err)
+	param := regexp.MustCompile(`:([a-z]+)`)
+	checked := 0
+	for _, rt := range r.Routes() {
+		path, ok := strings.CutPrefix(rt.Path, "/api/v1")
+		if !ok || path == "/openapi.yaml" {
+			continue
+		}
+		path = param.ReplaceAllString(path, "{$1}")
+		item := doc.Paths.Find(path)
+		require.NotNil(t, item, "%s %s absent de openapi.yaml", rt.Method, path)
+		require.NotNil(t, item.GetOperation(rt.Method), "%s %s absent de openapi.yaml", rt.Method, path)
+		checked++
+	}
+	require.Greater(t, checked, 60)
 }

@@ -494,10 +494,10 @@ func (s *Service) AcceptApplication(ctx context.Context, a Actor, annID, appID u
 		}
 		if err := tx.QueryRow(ctx, `
 			INSERT INTO echange (montant_total, depot_owner, depot_nom, besoin, delai_jours, date_creation,
-			                     id_demandeur, id_prestataire, id_annonce, id_pack)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id_echange`,
+			                     id_demandeur, id_prestataire, id_annonce, id_pack, duree_sprint_jours)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id_echange`,
 			cand.Price, ann.Repo.Owner, ann.Repo.Name, ann.Need, cand.Days, s.now(),
-			ann.Author, cand.Provider, ann.ID, ann.PackID).Scan(&exID); err != nil {
+			ann.Author, cand.Provider, ann.ID, ann.PackID, sprintDays).Scan(&exID); err != nil {
 			return err
 		}
 		for i, m := range cand.Milestones {

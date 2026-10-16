@@ -13,7 +13,10 @@ func (s *Service) onUserCreated(ctx context.Context, tx pgx.Tx, userID uuid.UUID
 }
 
 // onExchangeClosed s'exécute dans la transaction qui termine ou annule un
-// échange : les secrets du coffre sont révoqués (RG19).
+// échange : les secrets du coffre sont révoqués (RG19) et les sprints clos (F16).
 func (s *Service) onExchangeClosed(ctx context.Context, tx pgx.Tx, exchangeID uuid.UUID) error {
-	return s.revokeExchangeSecrets(ctx, tx, exchangeID)
+	if err := s.revokeExchangeSecrets(ctx, tx, exchangeID); err != nil {
+		return err
+	}
+	return s.advanceSprints(ctx, tx, exchangeID)
 }

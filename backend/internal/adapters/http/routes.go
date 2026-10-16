@@ -67,6 +67,21 @@ func mountRoutes(v1 *gin.RouterGroup, o Options) {
 	m.POST("/echanges/:id/refuser", idem, ex.refuse)
 	m.POST("/echanges/:id/annuler", idem, ex.cancel)
 
+	sc := scrumHandlers{svc: o.App}
+	m.GET("/echanges/:id/scrum", sc.get)
+	m.PATCH("/echanges/:id/scrum", sc.patch)
+	m.GET("/echanges/:id/scrum/planning", sc.planning)
+	m.GET("/echanges/:id/scrum/sprints", sc.sprints)
+	m.PATCH("/echanges/:id/scrum/sprints/:numero", sc.patchSprint)
+	m.PUT("/echanges/:id/scrum/sprints/:numero/retro", sc.retro)
+	m.GET("/echanges/:id/scrum/stories", sc.stories)
+	m.POST("/echanges/:id/scrum/stories", idem, sc.createStory)
+	m.PATCH("/echanges/:id/scrum/stories/:sid", sc.patchStory)
+	m.POST("/echanges/:id/scrum/avenants", idem, sc.propose)
+	m.POST("/echanges/:id/scrum/avenants/:aid/accepter", idem, sc.decide(true))
+	m.POST("/echanges/:id/scrum/avenants/:aid/refuser", sc.decide(false))
+	m.POST("/echanges/:id/scrum/synchro", idem, sc.resync)
+
 	dl := deliveryHandlers{svc: o.App, webhooks: o.Webhooks}
 	m.POST("/jalons/:id/preuves", dl.submitProof)
 	m.POST("/jalons/:id/reverifier", dl.reverify)

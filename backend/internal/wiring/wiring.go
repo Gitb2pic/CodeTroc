@@ -27,7 +27,7 @@ func Service(cfg config.Config, pool *pgxpool.Pool, logger *slog.Logger) (*app.S
 	settings := app.DefaultSettings()
 	settings.MinGitHubAccountAge = cfg.MinGitHubAccountAge
 
-	deps := app.Deps{DB: pool, Tokens: tokens, Settings: settings}
+	deps := app.Deps{DB: pool, Tokens: tokens, Settings: settings, AppURL: cfg.PublicURL}
 	if cfg.GitHubOAuthEnabled() {
 		deps.OAuth = &ghadapter.OAuth{ClientID: cfg.GitHubClientID, ClientSecret: cfg.GitHubClientSecret, RedirectURL: cfg.OAuthRedirectURL()}
 	} else {
@@ -39,6 +39,7 @@ func Service(cfg config.Config, pool *pgxpool.Pool, logger *slog.Logger) (*app.S
 			return nil, err
 		}
 		deps.GitHub = gh
+		deps.Issues = gh // F16 : issues, labels et milestones (permission issues:write, D18)
 	} else {
 		logger.Warn("GitHub App non configurée : les preuves PR resteront en attente")
 	}

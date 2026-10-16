@@ -249,6 +249,7 @@ type OfferInput struct {
 	Price       int64
 	Days        int
 	Milestones  []catalog.Milestone
+	SprintDays  int // 7 par défaut (D20)
 }
 
 // OfferPack résume le pack d'une offre.
@@ -276,6 +277,7 @@ type OfferView struct {
 	Price       int64
 	Days        int
 	Milestones  []catalog.Milestone
+	SprintDays  int
 	Status      string
 	PublishedAt time.Time
 	Pack        OfferPack
@@ -295,12 +297,18 @@ func (s *Service) CreateOffer(ctx context.Context, a Actor, in OfferInput) (Offe
 	if err := o.Validate(catalog.Pack{MinPrice: pack.MinPrice, MaxPrice: pack.MaxPrice}); err != nil {
 		return OfferView{}, fromValidation(err)
 	}
+	if in.SprintDays == 0 {
+		in.SprintDays = catalog.SprintWeek
+	}
+	if err := catalog.ValidateSprintDays(in.SprintDays); err != nil {
+		return OfferView{}, fromValidation(err)
+	}
 	ms, _ := json.Marshal(in.Milestones)
 	var id uuid.UUID
 	if err := s.db.QueryRow(ctx, `
-		INSERT INTO offre (titre_offre, description, prix_credits, delai_jours, jalons_proposes, date_publication, id_prestataire, id_pack)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id_offre`,
-		in.Title, in.Description, in.Price, in.Days, ms, s.now(), a.ID, in.PackID).Scan(&id); err != nil {
+		INSERT INTO offre (titre_offre, description, prix_credits, delai_jours, jalons_proposes, date_publication, id_prestataire, id_pack, duree_sprint_jours)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id_offre`,
+		in.Title, in.Description, in.Price, in.Days, ms, s.now(), a.ID, in.PackID, in.SprintDays).Scan(&id); err != nil {
 		return OfferView{}, err
 	}
 	return s.GetOffer(ctx, &a, id)
@@ -326,7 +334,7 @@ func (s *Service) WithdrawOffer(ctx context.Context, a Actor, id uuid.UUID) erro
 
 const offerSelect = `
 	SELECT o.id_offre, o.titre_offre, o.description, o.prix_credits, o.delai_jours, o.jalons_proposes,
-	       o.statut_offre, o.date_publication,
+	       o.duree_sprint_jours, o.statut_offre, o.date_publication,
 	       p.id_pack, p.titre_pack, p.type_preuve,
 	       COALESCE((SELECT array_agg(c.libelle_competence ORDER BY c.libelle_competence)
 	                 FROM requerir r JOIN competence c USING (id_competence) WHERE r.id_pack = p.id_pack), '{}'),
@@ -339,7 +347,7 @@ const offerSelect = `
 func scanOffer(row pgx.Row) (OfferView, error) {
 	var o OfferView
 	var ms []byte
-	err := row.Scan(&o.ID, &o.Title, &o.Description, &o.Price, &o.Days, &ms, &o.Status, &o.PublishedAt,
+	err := row.Scan(&o.ID, &o.Title, &o.Description, &o.Price, &o.Days, &ms, &o.SprintDays, &o.Status, &o.PublishedAt,
 		&o.Pack.ID, &o.Pack.Title, &o.Pack.ProofType, &o.Pack.Skills,
 		&o.Provider.ID, &o.Provider.Pseudo, &o.Provider.GitHubLogin, &o.Provider.Reputation, &o.Provider.Deliveries)
 	if err != nil {
